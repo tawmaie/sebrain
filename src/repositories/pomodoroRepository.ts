@@ -190,6 +190,26 @@ export async function clearActiveTimer(): Promise<void> {
   await db.execute("DELETE FROM active_timer WHERE id = $1", [ACTIVE_TIMER_ID]);
 }
 
+export async function getFocusMinutesToday(): Promise<number> {
+  const db = await getDatabase();
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+
+  const rows = await db.select<{ total: number }[]>(
+    `SELECT COALESCE(SUM(duration_seconds), 0) AS total
+     FROM pomodoro_sessions
+     WHERE session_type = 'focus'
+       AND status = 'completed'
+       AND started_at >= $1
+       AND started_at <= $2`,
+    [start.toISOString(), end.toISOString()],
+  );
+
+  return Math.floor((rows[0]?.total ?? 0) / 60);
+}
+
 export async function findRunningSessionForTimer(params: {
   taskId: string | null;
   noteId: string | null;

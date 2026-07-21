@@ -2,17 +2,61 @@
 
 ## 1. Product Principle
 
-SeBrain ต้องช่วยให้ผู้ใช้ทำ 3 อย่างได้เร็วที่สุด:
+SeBrain ไม่ใช่ Todo App ทั่วไปหรือ Notion อีกตัว
 
-1. จดสิ่งที่คิดออกทันที
-2. หาโน้ตหรืองานเดิมได้ง่าย
-3. เลือกงานแล้วเริ่มโฟกัสได้ทันที
+SeBrain คือ **ระบบปฏิบัติการสำหรับความคิด (Personal Work OS)** ที่ช่วยให้คุณเก็บทุกไอเดียทันที จัดระเบียบงานอย่างเป็นธรรมชาติ โฟกัสกับสิ่งสำคัญ และค้นคืนความรู้ได้ภายในไม่กี่วินาที โดยทุกอย่างทำงานแบบ Local-first และข้อมูลทั้งหมดเป็นของคุณ
+
+> **Capture fast. Organize naturally. Focus deeply. Remember everything.**
+
+### แกนหลัก 4 ขั้น
+
+```text
+Capture → Organize → Focus → Recall
+```
+
+- **Capture** — จดสิ่งที่คิดออกทันทีก่อนมันหาย
+- **Organize** — จัด Inbox ให้กลายเป็น Task หรือ Note
+- **Focus** — เลือกงานและเริ่มโฟกัสได้ทันที
+- **Recall** — ค้นคืนความรู้และบริบทของงานที่ผ่านมา
+
+### Information Lifecycle
+
+ทุกอย่างใน SeBrain มี lifecycle ที่ต่อเนื่องกัน ไม่มีข้อมูลที่ "หายไปหลังทำเสร็จ"
+
+```text
+Idea
+  ↓
+Inbox
+  ↓
+Task
+  ↓
+Focus
+  ↓
+Done
+  ↓
+Knowledge (Note)
+```
+
+Task ที่เสร็จแล้วควรกลายเป็นความรู้ ไม่ใช่แค่ถูก check แล้วหาย
+
+### Task เป็น Knowledge Container
+
+Task ไม่ใช่แค่ checkbox Task คือ container ที่ผูกกับ Note ได้
+
+```text
+Task: Implement Login
+  └── Linked Note: OAuth Flow · JWT · Meeting Notes
+```
+
+ผลคือ Task + Time (Pomodoro) + Knowledge (Note) = Second Brain จริง
+
+### เกณฑ์ตัดสินฟีเจอร์
 
 ทุกหน้าจอและทุกฟีเจอร์ต้องผ่านคำถามนี้:
 
-> สิ่งนี้ช่วยให้จด ค้นหา หรือเริ่มทำงานเร็วขึ้นหรือไม่
+> ฟีเจอร์นี้ช่วยให้ Capture เร็วขึ้น, Organize ง่ายขึ้น, Focus ดีขึ้น หรือ Recall ได้ดีขึ้นหรือไม่
 
-หากไม่ช่วยอย่างชัดเจน ไม่ควรเพิ่มใน MVP
+หากไม่ช่วยอย่างใดอย่างหนึ่งอย่างชัดเจน ไม่ควรเพิ่มใน MVP
 
 ---
 
@@ -546,15 +590,34 @@ Start Focus
 
 ## 16. Today Page Rules
 
-Today เป็นหน้าเปิดแอปหลัก
+Today เป็นหน้าเปิดแอปหลัก ไม่ใช่ Task List ทั้งหมด แต่คือ "วันนี้ฉันต้องทำอะไร"
 
 ลำดับข้อมูล:
 
 1. Quick Capture
 2. Current Focus หรือ Doing
 3. Today Tasks
-4. Focus summary วันนี้
+4. Progress Card (งานที่ทำเสร็จวันนี้)
 5. Recent Notes หากยังมีพื้นที่
+
+### Progress Card
+
+แสดงข้อมูล 3 จุดในการ์ดขนาดกะทัดรัด:
+
+```text
+PROGRESS
+วันนี้คืบหน้า
+
+[========--------]  4 / 8 งาน
+
+7 รอบโฟกัส   ·   42 นาที
+```
+
+กฎ:
+
+- ซ่อน card หากยังไม่มีงานที่วางแผนไว้วันนี้เลย (total = 0)
+- Progress bar ใช้รูปแบบเดียวกับ task-progress ที่มีอยู่
+- ไม่แสดงกราฟ ไม่แสดงสถิติรายสัปดาห์/เดือน
 
 ห้ามใส่:
 
@@ -569,7 +632,7 @@ Today เป็นหน้าเปิดแอปหลัก
 ```text
 ตอนนี้กำลังทำอะไร
 งานถัดไปคืออะไร
-วันนี้โฟกัสไปเท่าไร
+วันนี้โฟกัสไปเท่าไรแล้ว
 ```
 
 ---
@@ -777,32 +840,77 @@ Component เดียวกันต้องมีหน้าตาและ�
 
 ยังไม่ควรเพิ่ม:
 
+- Calendar เต็มรูปแบบ
+- Kanban board
+- AI Chat / AI assistant
+- Whiteboard
+- Mind Map
+- Team workspace
+- Sharing / Collaboration
+- Cloud sync
+- Reminder / Notification
+- Habit Tracker
 - Folder ซ้อนหลายชั้น
 - Project hierarchy
-- Team workspace
 - Comment
-- Cloud sync
-- Calendar เต็มรูปแบบ
 - Graph view
-- AI assistant
 - Rich text block editor
 - Custom theme
 - Plugin system
 - Widget dashboard
+
+ทั้งหมดข้างต้นไม่ได้ช่วยให้ Capture เร็วขึ้น, Organize ง่ายขึ้น, Focus ดีขึ้น หรือ Recall ได้ดีขึ้นอย่างมีนัยสำคัญ
+
+### Knowledge Organization
+
+Knowledge ใน SeBrain ไม่ใช้ Folder แต่ใช้:
+
+- **Search** — ค้นหาข้ามทุกประเภทในที่เดียว (Task + Note + Inbox)
+- **Recent** — โน้ตและงานล่าสุดอยู่ใกล้มือเสมอ
+- **Pin** — ตรึงสิ่งสำคัญให้อยู่บนสุด
+- **Backlink** — เชื่อมโน้ตและงานถึงกัน
+
+ผู้ใช้ไม่ควรต้องคิดว่าจะวางข้อมูลไว้ใน "folder ไหน"
 
 MVP ต้องเน้น:
 
 ```text
 Capture
 Organize
-Write
 Focus
-Retrieve
+Recall
 ```
 
 ---
 
-## 26. UX Acceptance Criteria
+## 26. UX Friction Rule — 2 Steps Maximum
+
+ทุก Action สำคัญต้องทำได้ไม่เกิน 2 Steps
+
+ตัวอย่าง Action ที่ผ่าน:
+
+```text
+Open App → Type → Enter
+Task → Start Focus
+Ctrl+N → Type → Enter
+```
+
+ตัวอย่าง Flow ที่ไม่ควรเกิด:
+
+```text
+Open → Select → Choose category → Confirm → Start
+```
+
+กฎ:
+
+- ถ้า Action ต้องการ Modal + Form + Confirm ก่อนจะทำได้ ต้องทบทวน UX ก่อน
+- Quick Capture ต้องไม่มี Step กลาง
+- เปลี่ยน Task status ต้องทำได้ใน 1 Action
+- Start Focus ต้องทำได้ใน 1–2 Action จาก Task
+
+---
+
+## 27. UX Acceptance Criteria
 
 SeBrain ถือว่าผ่านด้าน UX รุ่นแรกเมื่อ:
 

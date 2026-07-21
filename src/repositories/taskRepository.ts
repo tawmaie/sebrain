@@ -251,3 +251,23 @@ export async function countFocusSessionsToday(): Promise<number> {
 
   return rows[0]?.count ?? 0;
 }
+
+export async function getTodayTaskStats(): Promise<{
+  done: number;
+  total: number;
+}> {
+  const db = await getDatabase();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const rows = await db.select<{ done: number; total: number }[]>(
+    `SELECT
+       COUNT(CASE WHEN status = 'done' AND date(completed_at) = $1 THEN 1 END) AS done,
+       COUNT(*) AS total
+     FROM tasks
+     WHERE planned_date = $1
+        OR (status = 'done' AND date(completed_at) = $1)`,
+    [today],
+  );
+
+  return rows[0] ?? { done: 0, total: 0 };
+}
