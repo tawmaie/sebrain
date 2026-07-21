@@ -89,12 +89,12 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
           </button>
         </div>
 
-        <div className="filter-row">
+        <div className="tab-row">
           {(["all", "inbox", "today", "doing", "done"] as const).map((value) => (
             <button
               key={value}
               type="button"
-              className={filter === value ? "chip is-active" : "chip"}
+              className={filter === value ? "tab is-active" : "tab"}
               onClick={() => setFilter(value)}
             >
               {value}

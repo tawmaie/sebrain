@@ -105,7 +105,7 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
         <section className="card-section">
           <h3>กำลังทำ</h3>
           {!loading && !error && doing.length === 0 ? (
-            <EmptyState title="ยังไม่มีงานที่กำลังทำ" />
+            <EmptyState title="ยังไม่มีงานที่กำลังทำ" compact />
           ) : null}
           <div className="list-stack">
             {doing.map((task) => (
@@ -145,7 +145,7 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
       <section className="card-section today-tasks-section">
         <h3>งานของวันนี้</h3>
         {!loading && !error && today.length === 0 ? (
-          <EmptyState title="ยังไม่มีงานที่ตั้งไว้สำหรับวันนี้" />
+          <EmptyState title="ยังไม่มีงานที่ตั้งไว้สำหรับวันนี้" compact />
         ) : null}
         <div className="list-stack">
           {today.map((task) => (
