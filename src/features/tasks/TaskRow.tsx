@@ -1,4 +1,12 @@
 import type { Task } from "../../types/task";
+import {
+  cn,
+  listRow,
+  listRowClickable,
+  listRowMeta,
+  listRowSelected,
+  listRowTitle,
+} from "../../lib/ui";
 
 interface TaskRowProps {
   task: Task;
@@ -13,23 +21,43 @@ const statusLabel: Record<Task["status"], string> = {
   done: "Done",
 };
 
+const statusDotColor: Record<Task["status"], string> = {
+  inbox: "bg-text-disabled",
+  today: "bg-black",
+  doing: "bg-accent shadow-[0_0_0_2px_var(--color-accent-soft)]",
+  done: "bg-border-strong",
+};
+
 export function TaskRow({ task, selected, onSelect }: TaskRowProps) {
   const isDone = task.status === "done";
 
   return (
     <button
       type="button"
-      className={
-        selected ? "list-row is-selected clickable" : "list-row clickable"
-      }
+      className={cn(
+        listRow,
+        listRowClickable,
+        selected && listRowSelected,
+      )}
       onClick={onSelect}
     >
-      <div className="list-row-main">
-        <p className={isDone ? "list-row-title is-done" : "list-row-title"}>
-          <span className={`status-dot status-${task.status}`} aria-hidden="true" />
+      <div>
+        <p
+          className={cn(
+            listRowTitle,
+            isDone && "font-medium text-text-disabled line-through",
+          )}
+        >
+          <span
+            className={cn(
+              "mr-2 inline-block h-[7px] w-[7px] shrink-0 rounded-full",
+              statusDotColor[task.status],
+            )}
+            aria-hidden="true"
+          />
           {task.title}
         </p>
-        <p className="list-row-meta">
+        <p className={listRowMeta}>
           {statusLabel[task.status]} · {task.completedPomodoros}/
           {task.estimatedPomodoros} focus sessions
         </p>

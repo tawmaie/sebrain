@@ -1,6 +1,7 @@
 import type { Task } from "../../types/task";
 import { EmptyState } from "../../components/common/EmptyState";
 import { TaskRow } from "./TaskRow";
+import { cn, listStack } from "../../lib/ui";
 
 interface TaskListProps {
   tasks: Task[];
@@ -19,7 +20,7 @@ export function TaskList({ tasks, selectedId, onSelect }: TaskListProps) {
   }
 
   return (
-    <div className="list-stack">
+    <div className={cn(listStack, "border-t-0")}>
       {tasks.map((task) => (
         <TaskRow
           key={task.id}

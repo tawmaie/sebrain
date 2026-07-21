@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { btnPrimary, input as inputClass } from "../../lib/ui";
 
 interface QuickCaptureProps {
   onSubmit: (content: string) => Promise<void>;
@@ -34,9 +35,9 @@ export function QuickCapture({
   }
 
   return (
-    <div className="quick-capture">
+    <div>
       <form
-        className="quick-capture-form"
+        className="mb-5 grid grid-cols-[1fr_auto] gap-2"
         onSubmit={(event) => {
           event.preventDefault();
           void handleSubmit();
@@ -44,6 +45,7 @@ export function QuickCapture({
       >
         <input
           type="text"
+          className={inputClass}
           value={value}
           autoFocus={autoFocus}
           placeholder={placeholder}
@@ -52,13 +54,13 @@ export function QuickCapture({
         />
         <button
           type="submit"
-          className="btn btn-primary"
+          className={btnPrimary}
           disabled={saving || !value.trim()}
         >
           {saving ? "กำลังเพิ่ม..." : "เพิ่ม"}
         </button>
       </form>
-      {error ? <p className="inline-error">{error}</p> : null}
+      {error ? <p className="mt-2 mb-0 text-xs text-danger">{error}</p> : null}
     </div>
   );
 }

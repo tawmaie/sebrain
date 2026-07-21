@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import "./TodayPage.css";
 import type { Task } from "../../types/task";
 import type { Note } from "../../types/note";
 import {
@@ -17,6 +16,7 @@ import { LoadingState } from "../../components/common/LoadingState";
 import { QuickCapture } from "../inbox/QuickCapture";
 import { PomodoroTimer } from "../focus/PomodoroTimer";
 import type { usePomodoro } from "../../hooks/usePomodoro";
+import { cn } from "../../lib/ui";
 
 type PomodoroApi = ReturnType<typeof usePomodoro>;
 
@@ -119,32 +119,49 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
   };
 
   return (
-    <div className="today-page">
-      <header className="today-header">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-[1440px] flex-col gap-6 overflow-auto p-6 max-[640px]:gap-4 max-[640px]:p-4">
+      <header className="flex items-start justify-between gap-6 max-[640px]:flex-col max-[640px]:items-stretch">
         <div>
-          <p className="today-header-eyebrow">{currentDate}</p>
-          <h1>วันนี้</h1>
-          <p className="today-header-description">
+          <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
+            {currentDate}
+          </p>
+          <h1 className="m-0 text-[clamp(30px,4vw,42px)] leading-[1.1] tracking-[-0.04em] text-text-primary">
+            วันนี้
+          </h1>
+          <p className="mt-2 mb-0 text-[15px] text-text-secondary">
             เลือกงานสำคัญ แล้วค่อย ๆ ทำให้เสร็จทีละเรื่อง
           </p>
         </div>
 
-        <div className="focus-stat-card" aria-label={`โฟกัสแล้ว ${focusCount} รอบ`}>
-          <span className="focus-stat-label">Focus วันนี้</span>
-          <div className="focus-stat-value">
-            <strong>{focusCount}</strong>
-            <span>รอบ</span>
+        <div
+          className="zebra-surface min-w-[150px] rounded-card border border-border px-5 py-4 max-[640px]:min-w-0"
+          aria-label={`โฟกัสแล้ว ${focusCount} รอบ`}
+        >
+          <span className="mb-1 block text-xs text-text-secondary">
+            Focus วันนี้
+          </span>
+          <div className="flex items-baseline gap-2">
+            <strong className="text-[30px] leading-none text-text-primary">
+              {focusCount}
+            </strong>
+            <span className="text-[13px] text-text-secondary">รอบ</span>
           </div>
         </div>
       </header>
 
-      <section className="quick-capture-card">
-        <div className="section-heading">
+      <section className="rounded-modal border border-text-primary bg-surface p-5 shadow-[4px_4px_0_var(--color-text-primary)] max-[640px]:rounded-modal max-[640px]:p-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <p className="section-kicker">QUICK CAPTURE</p>
-            <h2>มีอะไรอยู่ในหัวไหม?</h2>
+            <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
+              QUICK CAPTURE
+            </p>
+            <h2 className="m-0 text-[18px] leading-[1.25] tracking-[-0.02em] text-text-primary">
+              มีอะไรอยู่ในหัวไหม?
+            </h2>
           </div>
-          <span className="keyboard-hint">Enter เพื่อบันทึก</span>
+          <span className="rounded-button border border-border bg-bg px-2 py-1.5 text-[11px] text-text-secondary max-[640px]:hidden">
+            Enter เพื่อบันทึก
+          </span>
         </div>
 
         <QuickCapture
@@ -157,29 +174,41 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
       </section>
 
       {loading ? (
-        <div className="today-state-card">
+        <div className="rounded-modal border border-border bg-surface p-6">
           <LoadingState />
         </div>
       ) : null}
 
       {!loading && error ? (
-        <div className="today-state-card">
+        <div className="rounded-modal border border-border bg-surface p-6">
           <ErrorMessage message={error} onRetry={() => void load()} />
         </div>
       ) : null}
 
       {!loading && !error ? (
         <>
-          <div className="today-main-grid">
-            <section className="dashboard-card focus-card">
-              <div className="section-heading">
+          <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)] items-stretch gap-5 max-[1024px]:grid-cols-1">
+            <section className="min-h-[390px] rounded-modal border border-border bg-[linear-gradient(145deg,rgba(0,0,0,0.025),transparent_45%),var(--color-surface)] p-5 max-[1024px]:min-h-0">
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <p className="section-kicker">CURRENT FOCUS</p>
-                  <h2>ช่วงเวลาโฟกัส</h2>
+                  <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
+                    CURRENT FOCUS
+                  </p>
+                  <h2 className="m-0 text-[18px] leading-[1.25] tracking-[-0.02em] text-text-primary">
+                    ช่วงเวลาโฟกัส
+                  </h2>
                 </div>
 
                 <span
-                  className={`timer-status-badge timer-status-${pomodoro.status}`}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-semibold",
+                    pomodoro.status === "running" &&
+                      "bg-accent-soft text-success",
+                    pomodoro.status === "paused" &&
+                      "bg-[#fef3c7] text-[#92400e]",
+                    pomodoro.status === "idle" &&
+                      "bg-surface-muted text-text-secondary",
+                  )}
                 >
                   {pomodoro.status === "running"
                     ? "กำลังโฟกัส"
@@ -203,20 +232,26 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
               />
             </section>
 
-            <section className="dashboard-card doing-card">
-              <div className="section-heading">
+            <section className="min-h-[390px] rounded-modal border border-border bg-surface p-5 max-[1024px]:min-h-0">
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <p className="section-kicker">IN PROGRESS</p>
-                  <h2>กำลังทำ</h2>
+                  <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
+                    IN PROGRESS
+                  </p>
+                  <h2 className="m-0 text-[18px] leading-[1.25] tracking-[-0.02em] text-text-primary">
+                    กำลังทำ
+                  </h2>
                 </div>
 
-                <span className="item-count">{doing.length}</span>
+                <span className="inline-grid h-[30px] min-w-[30px] place-items-center rounded-full bg-surface-muted px-2 text-xs font-bold text-text-primary">
+                  {doing.length}
+                </span>
               </div>
 
               {doing.length === 0 ? (
                 <EmptyState title="ยังไม่มีงานที่กำลังทำ" compact />
               ) : (
-                <div className="task-list">
+                <div className="flex flex-col gap-2">
                   {doing.map((task) => {
                     const isSelected = task.id === pomodoro.taskId;
                     const isUpdating = updatingTaskId === task.id;
@@ -224,25 +259,30 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                     return (
                       <article
                         key={task.id}
-                        className={`task-item ${
-                          isSelected ? "task-item-active" : ""
-                        }`}
+                        className={cn(
+                          "flex items-center gap-3 rounded-card border border-border bg-surface p-3 transition-[border-color,transform,box-shadow] duration-150 hover:-translate-y-px hover:border-border-strong hover:shadow-[0_8px_22px_rgba(0,0,0,0.05)] max-[640px]:flex-col max-[640px]:items-stretch",
+                          isSelected &&
+                            "border-text-primary shadow-[inset_3px_0_0_var(--color-text-primary)]",
+                        )}
                       >
-                        <div className="task-item-content">
-                          <div className="task-title-row">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
                             <span
-                              className="task-status-indicator task-status-doing"
+                              className="h-2 w-2 shrink-0 rounded-full bg-accent shadow-[0_0_0_4px_var(--color-accent-soft)]"
                               aria-hidden="true"
                             />
-                            <h3>{task.title}</h3>
+                            <h3 className="m-0 text-sm font-semibold">
+                              {task.title}
+                            </h3>
                           </div>
 
-                          <div className="task-progress-row">
+                          <div className="mt-2 flex items-center gap-2">
                             <div
-                              className="task-progress"
+                              className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted"
                               aria-label={`${task.completedPomodoros} จาก ${task.estimatedPomodoros} รอบ`}
                             >
                               <span
+                                className="block h-full rounded-full bg-accent transition-[width] duration-[350ms]"
                                 style={{
                                   width: `${
                                     task.estimatedPomodoros > 0
@@ -258,14 +298,14 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                               />
                             </div>
 
-                            <span className="task-progress-label">
+                            <span className="shrink-0 text-xs text-text-secondary">
                               {task.completedPomodoros}/
                               {task.estimatedPomodoros} รอบ
                             </span>
                           </div>
 
                           {isSelected ? (
-                            <span className="active-focus-label">
+                            <span className="mt-1 block text-xs text-success">
                               กำลังใช้กับตัวจับเวลา
                             </span>
                           ) : null}
@@ -273,7 +313,7 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
 
                         <button
                           type="button"
-                          className="task-action task-action-complete"
+                          className="min-h-9 shrink-0 rounded-button border border-border bg-surface px-3 text-xs font-semibold text-text-primary transition-[border-color,background-color] duration-[120ms] hover:border-border-strong active:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 max-[640px]:w-full"
                           disabled={isUpdating}
                           onClick={() => {
                             void changeTaskStatus(task.id, "done");
@@ -289,44 +329,57 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
             </section>
           </div>
 
-          <section className="dashboard-card today-tasks-card">
-            <div className="section-heading">
+          <section className="rounded-modal border border-border bg-surface p-5">
+            <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <p className="section-kicker">TODAY TASKS</p>
-                <h2>งานของวันนี้</h2>
+                <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
+                  TODAY TASKS
+                </p>
+                <h2 className="m-0 text-[18px] leading-[1.25] tracking-[-0.02em] text-text-primary">
+                  งานของวันนี้
+                </h2>
               </div>
 
-              <span className="item-count">{today.length}</span>
+              <span className="inline-grid h-[30px] min-w-[30px] place-items-center rounded-full bg-surface-muted px-2 text-xs font-bold text-text-primary">
+                {today.length}
+              </span>
             </div>
 
             {today.length === 0 ? (
               <EmptyState title="ยังไม่มีงานที่ตั้งไว้สำหรับวันนี้" compact />
             ) : (
-              <div className="today-task-list">
+              <div className="flex flex-col">
                 {today.map((task, index) => {
                   const isUpdating = updatingTaskId === task.id;
 
                   return (
-                    <article key={task.id} className="today-task-item">
-                      <div className="today-task-number">
+                    <article
+                      key={task.id}
+                      className="grid grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-4 border-t border-border py-3 first:border-t-0 max-[640px]:grid-cols-[38px_minmax(0,1fr)]"
+                    >
+                      <div className="grid h-[38px] w-[38px] place-items-center rounded-button bg-surface-muted text-[11px] font-bold text-text-secondary">
                         {String(index + 1).padStart(2, "0")}
                       </div>
 
-                      <div className="today-task-content">
-                        <h3>{task.title}</h3>
+                      <div className="min-w-0">
+                        <h3 className="m-0 text-sm font-semibold">
+                          {task.title}
+                        </h3>
 
                         {task.estimatedPomodoros > 0 ? (
-                          <p>
+                          <p className="m-0 text-xs text-text-secondary">
                             ประมาณ {task.estimatedPomodoros} รอบโฟกัส
                           </p>
                         ) : (
-                          <p>ยังไม่ได้กำหนดเวลาประมาณการ</p>
+                          <p className="m-0 text-xs text-text-secondary">
+                            ยังไม่ได้กำหนดเวลาประมาณการ
+                          </p>
                         )}
                       </div>
 
                       <button
                         type="button"
-                        className="task-action task-action-primary"
+                        className="min-h-9 shrink-0 rounded-button border border-black bg-black px-3 text-xs font-semibold text-white transition-[border-color,background-color] duration-[120ms] hover:bg-[#333] disabled:cursor-not-allowed disabled:opacity-50 max-[640px]:w-full"
                         disabled={isUpdating}
                         onClick={() => {
                           void changeTaskStatus(task.id, "doing");
@@ -342,32 +395,39 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
           </section>
 
           {todayStats.total > 0 ? (
-            <section className="today-progress-card dashboard-card">
-              <div className="section-heading">
+            <section className="rounded-modal border border-border bg-surface p-5">
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <p className="section-kicker">PROGRESS</p>
-                  <h2>วันนี้คืบหน้า</h2>
+                  <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
+                    PROGRESS
+                  </p>
+                  <h2 className="m-0 text-[18px] leading-[1.25] tracking-[-0.02em] text-text-primary">
+                    วันนี้คืบหน้า
+                  </h2>
                 </div>
-                <span className="progress-task-label">
+                <span className="text-[13px] text-text-secondary">
                   {todayStats.done} / {todayStats.total} งาน
                 </span>
               </div>
 
               <div
-                className="progress-bar-track"
+                className="h-1.5 overflow-hidden rounded-full bg-surface-muted"
                 aria-label={`เสร็จแล้ว ${todayStats.done} จาก ${todayStats.total} งาน`}
               >
                 <div
-                  className="progress-bar-fill"
+                  className="zebra-fill h-full rounded-full transition-[width] duration-[350ms]"
                   style={{
                     width: `${Math.round((todayStats.done / todayStats.total) * 100)}%`,
                   }}
                 />
               </div>
 
-              <div className="progress-meta">
+              <div className="mt-3 flex items-center gap-2 text-[13px] text-text-secondary">
                 <span>{focusCount} รอบโฟกัส</span>
-                <span className="progress-meta-dot" aria-hidden="true" />
+                <span
+                  className="h-1 w-1 rounded-full bg-text-secondary"
+                  aria-hidden="true"
+                />
                 <span>
                   {focusMinutes >= 60
                     ? `${Math.floor(focusMinutes / 60)} ชม. ${focusMinutes % 60} นาที`
@@ -378,24 +438,36 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
           ) : null}
 
           {recentNotes.length > 0 ? (
-            <section className="recent-notes-section">
-              <div className="section-heading">
+            <section>
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <p className="section-kicker">RECENT NOTES</p>
-                  <h2>โน้ตล่าสุด</h2>
+                  <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
+                    RECENT NOTES
+                  </p>
+                  <h2 className="m-0 text-[18px] leading-[1.25] tracking-[-0.02em] text-text-primary">
+                    โน้ตล่าสุด
+                  </h2>
                 </div>
               </div>
 
-              <div className="notes-grid">
+              <div className="grid grid-cols-3 gap-3 max-[1024px]:grid-cols-1">
                 {recentNotes.map((note) => (
-                  <article key={note.id} className="note-card">
-                    <div className="note-card-icon" aria-hidden="true">
+                  <article
+                    key={note.id}
+                    className="flex min-w-0 items-center gap-3 rounded-card border border-border bg-surface p-3"
+                  >
+                    <div
+                      className="zebra-tile grid h-[34px] w-[34px] shrink-0 place-items-center rounded-button border border-border text-[11px] font-extrabold"
+                      aria-hidden="true"
+                    >
                       N
                     </div>
 
-                    <div>
-                      <h3>{note.title}</h3>
-                      <p>
+                    <div className="min-w-0">
+                      <h3 className="m-0 truncate text-sm font-semibold">
+                        {note.title}
+                      </h3>
+                      <p className="m-0 text-xs text-text-secondary">
                         อัปเดต{" "}
                         {new Intl.DateTimeFormat("th-TH", {
                           day: "numeric",

@@ -1,3 +1,5 @@
+import { btnPrimary, input } from "../../lib/ui";
+
 interface TopbarProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -12,19 +14,24 @@ export function Topbar({
   searchInputRef,
 }: TopbarProps) {
   return (
-    <header className="topbar">
+    <header className="grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-border bg-surface px-5 py-3">
       <span />
-      <div className="topbar-search">
+      <div className="w-full max-w-[420px]">
         <input
           ref={searchInputRef}
           type="search"
+          className={input}
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="ค้นหา Task, Note, Inbox... (Ctrl+K)"
           aria-label="Search"
         />
       </div>
-      <button type="button" className="btn btn-primary" onClick={onOpenCapture}>
+      <button
+        type="button"
+        className={btnPrimary}
+        onClick={onOpenCapture}
+      >
         + เพิ่มไอเดีย
       </button>
     </header>

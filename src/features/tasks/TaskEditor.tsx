@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 import type { Task, TaskStatus } from "../../types/task";
+import {
+  btn,
+  btnDanger,
+  btnPrimary,
+  field,
+  fieldLabel,
+  input as inputClass,
+} from "../../lib/ui";
 
 interface TaskEditorProps {
   task: Task | null;
@@ -42,34 +50,37 @@ export function TaskEditor({
 
   if (!task) {
     return (
-      <div className="detail-empty">
+      <div className="flex h-full min-h-[200px] items-center justify-center rounded-card border border-dashed border-border-strong text-text-secondary">
         <p>เลือกงานทางซ้ายเพื่อแก้ไข</p>
       </div>
     );
   }
 
   return (
-    <div className="detail-panel">
-      <h3>รายละเอียดงาน</h3>
-      <label className="field">
-        <span>ชื่องาน</span>
+    <div>
+      <h3 className="mb-4 text-lg font-semibold">รายละเอียดงาน</h3>
+      <label className={field}>
+        <span className={fieldLabel}>ชื่องาน</span>
         <input
           type="text"
+          className={inputClass}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
       </label>
-      <label className="field">
-        <span>รายละเอียด</span>
+      <label className={field}>
+        <span className={fieldLabel}>รายละเอียด</span>
         <textarea
+          className={inputClass}
           rows={6}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
       </label>
-      <label className="field">
-        <span>สถานะ</span>
+      <label className={field}>
+        <span className={fieldLabel}>สถานะ</span>
         <select
+          className={inputClass}
           value={status}
           onChange={(event) => setStatus(event.target.value as TaskStatus)}
         >
@@ -79,18 +90,20 @@ export function TaskEditor({
           <option value="done">Done</option>
         </select>
       </label>
-      <label className="field">
-        <span>วันที่กำหนด</span>
+      <label className={field}>
+        <span className={fieldLabel}>วันที่กำหนด</span>
         <input
           type="date"
+          className={inputClass}
           value={plannedDate}
           onChange={(event) => setPlannedDate(event.target.value)}
         />
       </label>
-      <label className="field">
-        <span>Focus sessions ที่ประมาณไว้</span>
+      <label className={field}>
+        <span className={fieldLabel}>Focus sessions ที่ประมาณไว้</span>
         <input
           type="number"
+          className={inputClass}
           min={1}
           value={estimatedPomodoros}
           onChange={(event) =>
@@ -99,12 +112,12 @@ export function TaskEditor({
         />
       </label>
 
-      {error ? <p className="inline-error">{error}</p> : null}
+      {error ? <p className="mt-2 mb-0 text-xs text-danger">{error}</p> : null}
 
-      <div className="row-actions wrap">
+      <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
-          className="btn btn-primary"
+          className={btnPrimary}
           disabled={saving}
           onClick={() => {
             void (async () => {
@@ -130,26 +143,30 @@ export function TaskEditor({
         </button>
         <button
           type="button"
-          className="btn"
+          className={btn}
           onClick={() => void onStatusChange("today")}
         >
           ย้ายไปวันนี้
         </button>
         <button
           type="button"
-          className="btn"
+          className={btn}
           onClick={() => void onStatusChange("doing")}
         >
           เริ่มทำ
         </button>
         <button
           type="button"
-          className="btn"
+          className={btn}
           onClick={() => void onStatusChange("done")}
         >
           เสร็จแล้ว
         </button>
-        <button type="button" className="btn btn-danger" onClick={onDelete}>
+        <button
+          type="button"
+          className={btnDanger}
+          onClick={onDelete}
+        >
           ลบงาน
         </button>
       </div>

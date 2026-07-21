@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { TimerStatus } from "../../types/pomodoro";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
+import { btn, btnAccent, btnPrimary } from "../../lib/ui";
 
 interface TimerControlsProps {
   status: TimerStatus;
@@ -22,19 +23,27 @@ export function TimerControls({
   const [confirmReset, setConfirmReset] = useState(false);
 
   return (
-    <div className="timer-controls">
+    <div className="flex flex-wrap items-center justify-center gap-2">
       {status === "idle" ? (
-        <button type="button" className="btn btn-accent" onClick={onStart}>
+        <button
+          type="button"
+          className={btnAccent}
+          onClick={onStart}
+        >
           เริ่มโฟกัส
         </button>
       ) : null}
 
       {status === "running" ? (
         <>
-          <button type="button" className="btn btn-primary" onClick={onPause}>
+          <button
+            type="button"
+            className={btnPrimary}
+            onClick={onPause}
+          >
             หยุดชั่วคราว
           </button>
-          <button type="button" className="btn" onClick={onFinishEarly}>
+          <button type="button" className={btn} onClick={onFinishEarly}>
             จบก่อนเวลา
           </button>
         </>
@@ -44,19 +53,19 @@ export function TimerControls({
         <>
           <button
             type="button"
-            className="btn btn-primary"
+            className={btnPrimary}
             onClick={onResume}
           >
             ทำต่อ
           </button>
           <button
             type="button"
-            className="btn"
+            className={btn}
             onClick={() => setConfirmReset(true)}
           >
             รีเซ็ต
           </button>
-          <button type="button" className="btn" onClick={onFinishEarly}>
+          <button type="button" className={btn} onClick={onFinishEarly}>
             จบก่อนเวลา
           </button>
         </>

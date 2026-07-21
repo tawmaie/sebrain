@@ -11,6 +11,7 @@ import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { LoadingState } from "../../components/common/LoadingState";
 import { TaskList } from "./TaskList";
 import { TaskEditor } from "./TaskEditor";
+import { btnPrimary, cn, panelHeader, panelTitle } from "../../lib/ui";
 
 interface TasksPageProps {
   searchQuery: string;
@@ -66,13 +67,13 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
   const selected = tasks.find((task) => task.id === selectedId) ?? null;
 
   return (
-    <div className="panel-split">
-      <section className="content-panel">
-        <div className="panel-header">
-          <h2>Tasks</h2>
+    <div className="grid h-full min-h-0 grid-cols-[minmax(300px,360px)_minmax(360px,1fr)] max-[1100px]:grid-cols-1">
+      <section className="min-h-0 overflow-auto border-r border-border bg-surface-muted p-5 max-[1100px]:max-h-[40%] max-[1100px]:border-r-0 max-[1100px]:border-b">
+        <div className={panelHeader}>
+          <h2 className={panelTitle}>Tasks</h2>
           <button
             type="button"
-            className="btn btn-primary"
+            className={btnPrimary}
             onClick={() => {
               void (async () => {
                 try {
@@ -89,12 +90,15 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
           </button>
         </div>
 
-        <div className="tab-row">
+        <div className="mb-4 flex gap-5 border-b border-border">
           {(["all", "inbox", "today", "doing", "done"] as const).map((value) => (
             <button
               key={value}
               type="button"
-              className={filter === value ? "tab is-active" : "tab"}
+              className={cn(
+                "-mb-px border-0 border-b-2 border-transparent bg-transparent pb-3 pt-2 font-medium capitalize text-text-secondary hover:text-text-primary",
+                filter === value && "border-black font-semibold text-text-primary",
+              )}
               onClick={() => setFilter(value)}
             >
               {value}
@@ -115,7 +119,7 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
         ) : null}
       </section>
 
-      <section className="detail-side">
+      <section className="min-h-0 overflow-auto bg-surface p-5">
         <TaskEditor
           task={selected}
           onSave={async (patch) => {

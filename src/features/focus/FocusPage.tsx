@@ -8,6 +8,12 @@ import { LoadingState } from "../../components/common/LoadingState";
 import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { PomodoroTimer } from "./PomodoroTimer";
 import type { usePomodoro } from "../../hooks/usePomodoro";
+import {
+  field,
+  input as inputClass,
+  panelHeader,
+  panelTitle,
+} from "../../lib/ui";
 
 type PomodoroApi = ReturnType<typeof usePomodoro>;
 
@@ -44,15 +50,15 @@ export function FocusPage({ pomodoro }: FocusPageProps) {
   const selectedTask = tasks.find((task) => task.id === pomodoro.taskId);
 
   return (
-    <div className="panel-single focus-page">
-      <div className="panel-header">
-        <h2>Focus</h2>
+    <div className="h-full min-h-0 overflow-auto p-6">
+      <div className={panelHeader}>
+        <h2 className={panelTitle}>Focus</h2>
       </div>
 
       {!pomodoro.ready ? <LoadingState label="กำลังกู้สถานะ Timer..." /> : null}
       {pomodoro.error ? <ErrorMessage message={pomodoro.error} /> : null}
 
-      <div className="focus-layout">
+      <div className="mb-5 grid grid-cols-[1.2fr_1fr] gap-4 max-[1100px]:grid-cols-1">
         <PomodoroTimer
           remainingSeconds={pomodoro.remainingSeconds}
           durationSeconds={pomodoro.durationSeconds}
@@ -66,10 +72,11 @@ export function FocusPage({ pomodoro }: FocusPageProps) {
           onFinishEarly={() => void pomodoro.finishEarly()}
         />
 
-        <div className="focus-options">
-          <label className="field">
+        <div className="rounded-none border-0 border-t border-border bg-transparent pt-4">
+          <label className={field}>
             <span>โหมด</span>
             <select
+              className={inputClass}
               value={pomodoro.sessionType}
               disabled={locked}
               onChange={(event) =>
@@ -82,9 +89,10 @@ export function FocusPage({ pomodoro }: FocusPageProps) {
             </select>
           </label>
 
-          <label className="field">
+          <label className={field}>
             <span>งาน (ไม่บังคับ)</span>
             <select
+              className={inputClass}
               value={pomodoro.taskId ?? ""}
               disabled={locked || loadingMeta}
               onChange={(event) =>
@@ -100,9 +108,10 @@ export function FocusPage({ pomodoro }: FocusPageProps) {
             </select>
           </label>
 
-          <label className="field">
+          <label className={field}>
             <span>โน้ต (ไม่บังคับ)</span>
             <select
+              className={inputClass}
               value={pomodoro.noteId ?? ""}
               disabled={locked || loadingMeta}
               onChange={(event) =>
@@ -118,18 +127,25 @@ export function FocusPage({ pomodoro }: FocusPageProps) {
             </select>
           </label>
 
-          {metaError ? <p className="inline-error">{metaError}</p> : null}
+          {metaError ? (
+            <p className="mt-2 mb-0 text-xs text-danger">{metaError}</p>
+          ) : null}
         </div>
       </div>
 
-      <section className="session-history">
-        <h3>ประวัติล่าสุด</h3>
+      <section className="rounded-none border-0 border-t border-border bg-transparent pt-4">
+        <h3 className="mb-3 text-[13px] font-semibold tracking-[0.06em] text-text-secondary uppercase">
+          ประวัติล่าสุด
+        </h3>
         {pomodoro.sessions.length === 0 ? (
-          <p className="muted">ยังไม่มีรอบโฟกัส</p>
+          <p className="m-0 text-xs text-text-secondary">ยังไม่มีรอบโฟกัส</p>
         ) : (
-          <ul className="session-list">
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {pomodoro.sessions.map((session) => (
-              <li key={session.id}>
+              <li
+                key={session.id}
+                className="grid grid-cols-[1fr_1fr_1.4fr] gap-2 border-b border-border py-2 text-[13px] last:border-b-0"
+              >
                 <span>{session.sessionType.replace("_", " ")}</span>
                 <span>{session.status}</span>
                 <span>{new Date(session.startedAt).toLocaleString()}</span>

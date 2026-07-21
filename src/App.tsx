@@ -12,7 +12,6 @@ import { NotesPage } from "./features/notes/NotesPage";
 import { FocusPage } from "./features/focus/FocusPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { usePomodoro } from "./hooks/usePomodoro";
-import "./App.css";
 
 type BootState = "loading" | "ready" | "error";
 
@@ -91,9 +90,12 @@ function App() {
 
   if (bootState === "loading") {
     return (
-      <div className="boot-screen">
-        <div className="boot-brand">
-          <span className="boot-mark" aria-hidden="true" />
+      <div className="grid h-full place-items-center bg-bg p-6">
+        <div className="flex flex-col items-center gap-4">
+          <span
+            className="boot-mark relative h-12 w-12 overflow-hidden rounded-card bg-black"
+            aria-hidden="true"
+          />
           <LoadingState label="กำลังเตรียมฐานข้อมูล SeBrain..." />
         </div>
       </div>
@@ -102,7 +104,7 @@ function App() {
 
   if (bootState === "error") {
     return (
-      <div className="boot-screen">
+      <div className="grid h-full place-items-center bg-bg p-6">
         <ErrorMessage
           message={bootError ?? "เปิดฐานข้อมูลไม่สำเร็จ"}
           onRetry={() => void bootstrap()}

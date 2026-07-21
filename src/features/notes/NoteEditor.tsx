@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Note } from "../../types/note";
 import { MarkdownPreview } from "./MarkdownPreview";
+import { btn, btnDanger, chip, chipActive, cn } from "../../lib/ui";
 
 interface NoteEditorProps {
   note: Note | null;
@@ -79,38 +80,38 @@ export function NoteEditor({
 
   if (!note) {
     return (
-      <div className="detail-empty">
+      <div className="flex h-full min-h-[200px] items-center justify-center rounded-card border border-dashed border-border-strong text-text-secondary">
         <p>เลือกโน้ตทางซ้ายเพื่อแก้ไข</p>
       </div>
     );
   }
 
   return (
-    <div className="detail-panel note-editor">
-      <div className="panel-header compact">
+    <div className="flex h-full flex-col">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <input
-          className="title-input"
+          className="w-full !border-none !bg-transparent !p-1 text-lg font-semibold"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
-        <div className="row-actions">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className={mode === "edit" ? "chip is-active" : "chip"}
+            className={mode === "edit" ? chipActive : chip}
             onClick={() => setMode("edit")}
           >
             Write
           </button>
           <button
             type="button"
-            className={mode === "split" ? "chip is-active" : "chip"}
+            className={mode === "split" ? chipActive : chip}
             onClick={() => setMode("split")}
           >
             Split
           </button>
           <button
             type="button"
-            className={mode === "preview" ? "chip is-active" : "chip"}
+            className={mode === "preview" ? chipActive : chip}
             onClick={() => setMode("preview")}
           >
             Preview
@@ -118,7 +119,7 @@ export function NoteEditor({
         </div>
       </div>
 
-      <div className="save-indicator">
+      <div className="mb-2 text-xs text-text-secondary">
         {saveState === "saving"
           ? "กำลังบันทึก..."
           : saveState === "saved" && lastSavedAt
@@ -129,17 +130,18 @@ export function NoteEditor({
                 ? `บันทึกแล้ว ${new Date(lastSavedAt).toLocaleTimeString()}`
                 : ""}
       </div>
-      {error ? <p className="inline-error">{error}</p> : null}
+      {error ? <p className="mt-2 mb-0 text-xs text-danger">{error}</p> : null}
 
       <div
-        className={
-          mode === "split" ? "note-workspace split" : "note-workspace"
-        }
+        className={cn(
+          "mt-2 grid min-h-80 flex-1 gap-3",
+          mode === "split" && "grid-cols-2 max-[1100px]:grid-cols-1",
+        )}
       >
         {mode !== "preview" ? (
-          <div className="note-content-wrap">
+          <div>
             <textarea
-              className="markdown-editor"
+              className="min-h-80 w-full resize-y rounded-input border border-border-strong bg-surface px-3 py-[9px] font-mono text-sm leading-[1.7]"
               value={content}
               onChange={(event) => setContent(event.target.value)}
               placeholder="เขียน Markdown ที่นี่..."
@@ -147,24 +149,28 @@ export function NoteEditor({
           </div>
         ) : null}
         {mode !== "edit" ? (
-          <div className="note-content-wrap">
+          <div>
             <MarkdownPreview content={content} />
           </div>
         ) : null}
       </div>
 
-      <div className="row-actions wrap">
-        <button type="button" className="btn" onClick={() => void onTogglePin()}>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button type="button" className={btn} onClick={() => void onTogglePin()}>
           {note.isPinned ? "เลิกปักหมุด" : "ปักหมุด"}
         </button>
         <button
           type="button"
-          className="btn"
+          className={btn}
           onClick={() => void onToggleArchive()}
         >
           {note.isArchived ? "กู้คืน" : "เก็บถาวร"}
         </button>
-        <button type="button" className="btn btn-danger" onClick={onDelete}>
+        <button
+          type="button"
+          className={btnDanger}
+          onClick={onDelete}
+        >
           ลบโน้ต
         </button>
       </div>

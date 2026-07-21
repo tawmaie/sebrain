@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { btn, btnDanger, btnPrimary } from "../../lib/ui";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -46,24 +47,30 @@ export function ConfirmDialog({
   }
 
   return (
-    <div className="dialog-backdrop" role="presentation" onClick={onCancel}>
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-[rgba(24,24,24,0.45)]"
+      role="presentation"
+      onClick={onCancel}
+    >
       <div
-        className="dialog"
+        className="w-[min(420px,calc(100vw-32px))] rounded-modal bg-surface p-5 shadow-[0_16px_48px_rgba(0,0,0,0.22)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <h3 id="confirm-title">{title}</h3>
-        <p>{message}</p>
-        <div className="dialog-actions">
-          <button type="button" className="btn" onClick={onCancel}>
+        <h3 id="confirm-title" className="mb-2 text-base">
+          {title}
+        </h3>
+        <p className="m-0 text-[13px] text-text-secondary">{message}</p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button type="button" className={btn} onClick={onCancel}>
             {cancelLabel}
           </button>
           <button
             ref={confirmRef}
             type="button"
-            className={destructive ? "btn btn-danger" : "btn btn-primary"}
+            className={destructive ? btnDanger : btnPrimary}
             onClick={onConfirm}
           >
             {confirmLabel}

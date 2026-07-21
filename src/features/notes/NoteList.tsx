@@ -1,5 +1,14 @@
 import type { Note } from "../../types/note";
 import { EmptyState } from "../../components/common/EmptyState";
+import {
+  cn,
+  listRow,
+  listRowClickable,
+  listRowMeta,
+  listRowSelected,
+  listRowTitle,
+  listStack,
+} from "../../lib/ui";
 
 interface NoteListProps {
   notes: Note[];
@@ -18,27 +27,30 @@ export function NoteList({ notes, selectedId, onSelect }: NoteListProps) {
   }
 
   return (
-    <div className="list-stack">
+    <div className={cn(listStack, "border-t-0")}>
       {notes.map((note) => (
         <button
           key={note.id}
           type="button"
-          className={
-            selectedId === note.id
-              ? "list-row is-selected clickable"
-              : "list-row clickable"
-          }
+          className={cn(
+            listRow,
+            listRowClickable,
+            selectedId === note.id && listRowSelected,
+          )}
           onClick={() => onSelect(note.id)}
         >
-          <div className="list-row-main">
-            <p className="list-row-title">
+          <div>
+            <p className={listRowTitle}>
               {note.isPinned ? (
-                <span className="pin-dot" aria-label="ปักหมุด" />
+                <span
+                  className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_0_2px_var(--color-accent-soft)]"
+                  aria-label="ปักหมุด"
+                />
               ) : null}
               {note.title}
               {note.isArchived ? " · เก็บถาวร" : ""}
             </p>
-            <p className="list-row-meta">
+            <p className={listRowMeta}>
               อัปเดต {new Date(note.updatedAt).toLocaleString()}
             </p>
           </div>

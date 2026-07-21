@@ -14,6 +14,7 @@ import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { LoadingState } from "../../components/common/LoadingState";
 import { QuickCapture } from "./QuickCapture";
 import { InboxItemRow } from "./InboxItemRow";
+import { listStack, panelHeader, panelTitle } from "../../lib/ui";
 
 interface InboxPageProps {
   searchQuery: string;
@@ -67,9 +68,9 @@ export function InboxPage({
   }, [items, searchQuery]);
 
   return (
-    <div className="panel-single">
-      <div className="panel-header">
-        <h2>Inbox</h2>
+    <div className="h-full min-h-0 overflow-auto p-6">
+      <div className={panelHeader}>
+        <h2 className={panelTitle}>Inbox</h2>
       </div>
       <QuickCapture
         autoFocus={focusCapture}
@@ -91,7 +92,7 @@ export function InboxPage({
         />
       ) : null}
 
-      <div className="list-stack">
+      <div className={listStack}>
         {filtered.map((item) => (
           <InboxItemRow
             key={item.id}

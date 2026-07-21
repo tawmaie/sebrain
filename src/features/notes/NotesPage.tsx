@@ -11,6 +11,13 @@ import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { LoadingState } from "../../components/common/LoadingState";
 import { NoteList } from "./NoteList";
 import { NoteEditor } from "./NoteEditor";
+import {
+  btnPrimary,
+  chip,
+  chipActive,
+  panelHeader,
+  panelTitle,
+} from "../../lib/ui";
 
 interface NotesPageProps {
   searchQuery: string;
@@ -72,21 +79,21 @@ export function NotesPage({ searchQuery }: NotesPageProps) {
   );
 
   return (
-    <div className="panel-split">
-      <section className="content-panel">
-        <div className="panel-header">
-          <h2>Notes</h2>
-          <div className="row-actions">
+    <div className="grid h-full min-h-0 grid-cols-[minmax(300px,360px)_minmax(360px,1fr)] max-[1100px]:grid-cols-1">
+      <section className="min-h-0 overflow-auto border-r border-border bg-surface-muted p-5 max-[1100px]:max-h-[40%] max-[1100px]:border-r-0 max-[1100px]:border-b">
+        <div className={panelHeader}>
+          <h2 className={panelTitle}>Notes</h2>
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className={showArchived ? "chip is-active" : "chip"}
+              className={showArchived ? chipActive : chip}
               onClick={() => setShowArchived((value) => !value)}
             >
               เก็บถาวร
             </button>
             <button
               type="button"
-              className="btn btn-primary"
+              className={btnPrimary}
               onClick={() => {
                 void (async () => {
                   try {
@@ -117,7 +124,7 @@ export function NotesPage({ searchQuery }: NotesPageProps) {
         ) : null}
       </section>
 
-      <section className="detail-side">
+      <section className="min-h-0 overflow-auto bg-surface p-5">
         <NoteEditor
           note={selected}
           onSave={handleSave}

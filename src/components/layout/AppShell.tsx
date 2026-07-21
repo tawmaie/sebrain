@@ -25,16 +25,16 @@ export function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <div className="app-shell">
+    <div className="flex h-full flex-col bg-bg">
       <Topbar
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
         onOpenCapture={onOpenCapture}
         searchInputRef={searchInputRef}
       />
-      <div className="app-body">
+      <div className="grid min-h-0 flex-1 grid-cols-[232px_1fr] max-[1100px]:grid-cols-[72px_1fr]">
         <Sidebar view={view} onNavigate={onNavigate} inboxCount={inboxCount} />
-        <div className="app-main">{children}</div>
+        <div className="min-h-0 min-w-0 overflow-hidden">{children}</div>
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ export function PomodoroTimer({
   onFinishEarly,
 }: PomodoroTimerProps) {
   return (
-    <div className="pomodoro-timer">
+    <div className="rounded-card border border-border bg-surface px-5 py-6 shadow-[0_8px_24px_rgba(24,24,24,0.06)]">
       <TimerDisplay
         remainingSeconds={remainingSeconds}
         durationSeconds={durationSeconds}
