@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "predev": "npm run version:sync",
     "build": "tsc && vite build",
+    "prebuild": "npm run version:sync",
     "preview": "vite preview",
+    "version:sync": "node scripts/sync-version.mjs",
     "tauri": "tauri"
   },
   "dependencies": {
