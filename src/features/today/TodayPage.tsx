@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Task } from "../../types/task";
+import type { Task, TaskStatus } from "../../types/task";
 import type { Note } from "../../types/note";
 import {
   countFocusSessionsToday,
+  createTask,
+  deleteTask,
   getTodayTaskStats,
   listTasks,
   updateTask,
@@ -15,8 +17,9 @@ import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { LoadingState } from "../../components/common/LoadingState";
 import { QuickCapture } from "../inbox/QuickCapture";
 import { PomodoroTimer } from "../focus/PomodoroTimer";
+import { TaskDetailDrawer } from "./TaskDetailDrawer";
 import type { usePomodoro } from "../../hooks/usePomodoro";
-import { cn } from "../../lib/ui";
+import { btnPrimary, cn } from "../../lib/ui";
 
 type PomodoroApi = ReturnType<typeof usePomodoro>;
 
@@ -40,6 +43,9 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
   );
   const [error, setError] = useState<string | null>(null);
   const [focusCapture, setFocusCapture] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [creatingTask, setCreatingTask] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -87,7 +93,14 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
     return undefined;
   }, [captureRequestId]);
 
+  const allTasks = useMemo(() => [...doing, ...today], [doing, today]);
+
   const selectedTask = useMemo(
+    () => allTasks.find((task) => task.id === selectedTaskId) ?? null,
+    [allTasks, selectedTaskId],
+  );
+
+  const focusTask = useMemo(
     () => doing.find((task) => task.id === pomodoro.taskId),
     [doing, pomodoro.taskId],
   );
@@ -102,20 +115,83 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
     [],
   );
 
+  const openTaskDrawer = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setDrawerOpen(true);
+  };
+
+  const closeTaskDrawer = () => {
+    setDrawerOpen(false);
+  };
+
   const changeTaskStatus = async (
     taskId: Task["id"],
-    status: "doing" | "done",
+    status: Extract<TaskStatus, "today" | "doing" | "done">,
   ) => {
     setUpdatingTaskId(taskId);
 
     try {
       await updateTask(taskId, { status });
+
+      if (status === "doing") {
+        pomodoro.setTaskId(taskId);
+      } else if (pomodoro.taskId === taskId) {
+        pomodoro.setTaskId(null);
+      }
+
       await load();
+
+      if (status === "done" && selectedTaskId === taskId) {
+        closeTaskDrawer();
+        setSelectedTaskId(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setUpdatingTaskId(null);
     }
+  };
+
+  const handleAddTask = async () => {
+    setCreatingTask(true);
+    setError(null);
+
+    try {
+      const created = await createTask({
+        title: "งานใหม่",
+        status: "today",
+      });
+      await load();
+      openTaskDrawer(created.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setCreatingTask(false);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      if (pomodoro.taskId === taskId) {
+        pomodoro.setTaskId(null);
+      }
+
+      await deleteTask(taskId);
+      closeTaskDrawer();
+      setSelectedTaskId(null);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleTaskUpdated = (updated: Task) => {
+    setDoing((current) =>
+      current.map((task) => (task.id === updated.id ? updated : task)),
+    );
+    setToday((current) =>
+      current.map((task) => (task.id === updated.id ? updated : task)),
+    );
   };
 
   return (
@@ -223,7 +299,7 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                 durationSeconds={pomodoro.durationSeconds}
                 sessionType={pomodoro.sessionType}
                 status={pomodoro.status}
-                taskLabel={selectedTask?.title ?? null}
+                taskLabel={focusTask?.title ?? null}
                 onStart={() => void pomodoro.start()}
                 onPause={() => void pomodoro.pause()}
                 onResume={() => void pomodoro.resume()}
@@ -265,7 +341,11 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                             "border-text-primary shadow-[inset_3px_0_0_var(--color-text-primary)]",
                         )}
                       >
-                        <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-left"
+                          onClick={() => openTaskDrawer(task.id)}
+                        >
                           <div className="flex items-center gap-2">
                             <span
                               className="h-2 w-2 shrink-0 rounded-full bg-accent shadow-[0_0_0_4px_var(--color-accent-soft)]"
@@ -275,6 +355,12 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                               {task.title}
                             </h3>
                           </div>
+
+                          {task.description ? (
+                            <p className="mt-1 mb-0 line-clamp-2 text-xs text-text-secondary">
+                              {task.description}
+                            </p>
+                          ) : null}
 
                           <div className="mt-2 flex items-center gap-2">
                             <div
@@ -309,18 +395,30 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                               กำลังใช้กับตัวจับเวลา
                             </span>
                           ) : null}
-                        </div>
-
-                        <button
-                          type="button"
-                          className="min-h-9 shrink-0 rounded-button border border-border bg-surface px-3 text-xs font-semibold text-text-primary transition-[border-color,background-color] duration-[120ms] hover:border-border-strong active:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 max-[640px]:w-full"
-                          disabled={isUpdating}
-                          onClick={() => {
-                            void changeTaskStatus(task.id, "done");
-                          }}
-                        >
-                          {isUpdating ? "กำลังบันทึก..." : "เสร็จแล้ว"}
                         </button>
+
+                        <div className="flex shrink-0 gap-2 max-[640px]:w-full">
+                          <button
+                            type="button"
+                            className="min-h-9 rounded-button border border-border bg-surface px-3 text-xs font-semibold text-text-primary transition-[border-color,background-color] duration-[120ms] hover:border-border-strong active:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 max-[640px]:flex-1"
+                            disabled={isUpdating}
+                            onClick={() => {
+                              void changeTaskStatus(task.id, "today");
+                            }}
+                          >
+                            {isUpdating ? "กำลังบันทึก..." : "พักไว้"}
+                          </button>
+                          <button
+                            type="button"
+                            className="min-h-9 rounded-button border border-border bg-surface px-3 text-xs font-semibold text-text-primary transition-[border-color,background-color] duration-[120ms] hover:border-border-strong active:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 max-[640px]:flex-1"
+                            disabled={isUpdating}
+                            onClick={() => {
+                              void changeTaskStatus(task.id, "done");
+                            }}
+                          >
+                            เสร็จแล้ว
+                          </button>
+                        </div>
                       </article>
                     );
                   })}
@@ -340,9 +438,19 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                 </h2>
               </div>
 
-              <span className="inline-grid h-[30px] min-w-[30px] place-items-center rounded-full bg-surface-muted px-2 text-xs font-bold text-text-primary">
-                {today.length}
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className={btnPrimary}
+                  disabled={creatingTask}
+                  onClick={() => void handleAddTask()}
+                >
+                  {creatingTask ? "กำลังสร้าง..." : "+ เพิ่มงาน"}
+                </button>
+                <span className="inline-grid h-[30px] min-w-[30px] place-items-center rounded-full bg-surface-muted px-2 text-xs font-bold text-text-primary">
+                  {today.length}
+                </span>
+              </div>
             </div>
 
             {today.length === 0 ? (
@@ -361,10 +469,20 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                         {String(index + 1).padStart(2, "0")}
                       </div>
 
-                      <div className="min-w-0">
+                      <button
+                        type="button"
+                        className="min-w-0 cursor-pointer border-none bg-transparent p-0 text-left"
+                        onClick={() => openTaskDrawer(task.id)}
+                      >
                         <h3 className="m-0 text-sm font-semibold">
                           {task.title}
                         </h3>
+
+                        {task.description ? (
+                          <p className="mt-1 mb-0 line-clamp-2 text-xs text-text-secondary">
+                            {task.description}
+                          </p>
+                        ) : null}
 
                         {task.estimatedPomodoros > 0 ? (
                           <p className="m-0 text-xs text-text-secondary">
@@ -375,11 +493,11 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                             ยังไม่ได้กำหนดเวลาประมาณการ
                           </p>
                         )}
-                      </div>
+                      </button>
 
                       <button
                         type="button"
-                        className="min-h-9 shrink-0 rounded-button border border-black bg-black px-3 text-xs font-semibold text-white transition-[border-color,background-color] duration-[120ms] hover:bg-[#333] disabled:cursor-not-allowed disabled:opacity-50 max-[640px]:w-full"
+                        className="min-h-9 shrink-0 rounded-button border border-black bg-black px-3 text-xs font-semibold text-white transition-[border-color,background-color] duration-[120ms] hover:bg-[#333] disabled:cursor-not-allowed disabled:opacity-50 max-[640px]:col-span-2 max-[640px]:w-full"
                         disabled={isUpdating}
                         onClick={() => {
                           void changeTaskStatus(task.id, "doing");
@@ -483,6 +601,16 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
           ) : null}
         </>
       ) : null}
+
+      <TaskDetailDrawer
+        task={selectedTask}
+        pomodoroTaskId={pomodoro.taskId}
+        open={drawerOpen}
+        onClose={closeTaskDrawer}
+        onTaskUpdated={handleTaskUpdated}
+        onStatusChange={changeTaskStatus}
+        onDelete={handleDeleteTask}
+      />
     </div>
   );
 }
