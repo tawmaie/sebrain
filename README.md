@@ -22,14 +22,100 @@ SeBrain ถูกสร้างขึ้นเพื่อรองรับก
 
 ---
 
+## Features
+
+### Quick Capture และ Inbox
+
+- เพิ่มข้อความแบบรวดเร็วจากหน้า Today หรือ Inbox
+- บันทึกไอเดียหรืองานชั่วคราว
+- แสดงรายการล่าสุดก่อน
+- แก้ไขและลบข้อความ
+- เก็บข้อมูลใน SQLite และคงอยู่หลังปิดแอป
+
+### Task Management
+
+- จัดการงานตามสถานะ: Inbox, Today, Doing, Done
+- สร้าง แก้ไข และลบ Task
+- กำหนดงานสำหรับวันนี้
+- บันทึกวันที่เสร็จงาน
+- ผูก Note กับ Task ได้
+- ตั้งค่า Pomodoro ที่คาดว่าจะใช้ต่องาน
+
+### Pomodoro
+
+- Focus Timer, Short Break และ Long Break
+- Start / Pause / Resume / Reset / Finish Early
+- ผูก Pomodoro กับ Task หรือ Note
+- บันทึกประวัติ Focus Session
+- กู้สถานะ Timer หลังเปิดแอปใหม่ (คำนวณจาก `end_at`)
+- ตั้งค่าระยะเวลาและพฤติกรรม Timer ได้จาก Settings
+
+### Markdown Notes
+
+- สร้างและแก้ไข Note
+- รองรับ Markdown, หัวข้อ, Bullet List, Checklist และ Code Block
+- Preview Markdown แบบแยกหน้าจอ
+- Auto-save
+- Pin และ Archive Note
+
+ตัวอย่าง Markdown:
+
+```markdown
+# หัวข้อหลัก
+
+## ปัญหาที่พบ
+
+- ข้อมูลส่งไปไม่ครบ
+- ระบบไม่บันทึก Log
+
+## งานที่ต้องทำ
+
+- [ ] ตรวจสอบ Payload
+- [ ] แก้ไข Mapping
+- [x] ทดสอบ Database
+```
+
+### Today Dashboard
+
+- สรุปงานวันนี้และ Quick Capture ในหน้าเดียว
+- แสดง Note ล่าสุดและเวลาโฟกัสสะสมของวัน
+
+### Search และ Keyboard Shortcuts
+
+- ค้นหาข้าม Inbox, Tasks และ Notes
+- `Ctrl+K` — โฟกัสช่องค้นหา
+- `Ctrl+N` — เปิด Quick Capture
+
+### Settings
+
+- ปรับระยะเวลา Focus, Short Break และ Long Break
+- ตั้งค่า Long Break Interval
+- เปิด/ปิด Auto Start Break และการแจ้งเตือน
+
+---
+
+## Roadmap
+
+ฟีเจอร์ที่ยังไม่ได้พัฒนาในเวอร์ชันปัจจุบัน
+
+- Tags, Collections และ Favorites
+- Internal Note Links และ Backlinks
+- Export และ Import Backup
+- System Tray, Close to Tray และ Auto Start พร้อม Windows
+- Global Quick Capture Shortcut (นอกแอป)
+- Mini Pomodoro Window และ Always on Top
+- Windows Notification แบบ Native
+- Auto Update
+
+---
+
 ## Technology Stack
 
 ### Frontend
 
 - React
 - TypeScript
-- HTML
-- CSS
+- Tailwind CSS
 - Vite
 
 ### Desktop Application
@@ -65,17 +151,15 @@ SeBrain
 ├── Tauri
 │   ├── Desktop Window
 │   ├── Native Plugins
-│   ├── Notification
-│   ├── System Tray
 │   └── Windows Installer
 │
 └── SQLite
     └── sebrain.db
 ```
 
-SeBrain ไม่มี Backend Server ในเวอร์ชันเริ่มต้น
+SeBrain ไม่มี Backend Server ในเวอร์ชันปัจจุบัน
 
-React สามารถอ่านและเขียนข้อมูล SQLite ผ่าน Tauri SQL Plugin ได้โดยตรง
+React อ่านและเขียนข้อมูล SQLite ผ่าน Tauri SQL Plugin ได้โดยตรง
 
 ```text
 React Component
@@ -102,13 +186,16 @@ sebrain/
 │   │   ├── inbox/
 │   │   ├── tasks/
 │   │   ├── notes/
-│   │   └── pomodoro/
+│   │   ├── focus/
+│   │   ├── today/
+│   │   └── settings/
 │   ├── repositories/
 │   ├── services/
-│   │   └── database.ts
+│   │   ├── database.ts
+│   │   └── migrations.ts
+│   ├── hooks/
 │   ├── types/
 │   ├── App.tsx
-│   ├── App.css
 │   └── main.tsx
 │
 ├── src-tauri/
@@ -134,94 +221,9 @@ sebrain/
 | `src/components` | Component ที่ใช้ร่วมกันหลายหน้า |
 | `src/features` | UI และ Logic แยกตามฟีเจอร์ |
 | `src/repositories` | อ่านและเขียนข้อมูลจาก SQLite |
-| `src/services` | เปิด Database และเตรียมระบบพื้นฐาน |
+| `src/services` | เปิด Database, Migration และบริการพื้นฐาน |
 | `src/types` | TypeScript Type และ Interface |
 | `src-tauri` | Native Desktop Layer และ Tauri Configuration |
-
----
-
-## Planned Features
-
-### Phase 1 — Quick Capture และ Inbox
-
-- เพิ่มข้อความแบบรวดเร็ว
-- บันทึก Idea, Note หรือ Task ชั่วคราว
-- แสดงรายการล่าสุดก่อน
-- แก้ไขข้อความ
-- ลบข้อความ
-- เก็บข้อมูลใน SQLite
-- ปิดและเปิดแอปใหม่แล้วข้อมูลยังอยู่
-
-### Phase 2 — Task Management
-
-- Inbox
-- Today
-- Doing
-- Done
-- สร้าง แก้ไข และลบ Task
-- กำหนด Task สำหรับวันนี้
-- บันทึกวันที่เสร็จงาน
-- Pin งานสำคัญ
-
-### Phase 3 — Pomodoro
-
-- Focus Timer
-- Short Break
-- Long Break
-- Start / Pause / Resume / Reset / Finish Early
-- ผูก Pomodoro กับ Task หรือ Note
-- บันทึกประวัติ Focus Session
-- กู้สถานะ Timer หลังเปิดแอปใหม่
-- รองรับ Windows Notification
-
-### Phase 4 — Markdown Notes
-
-- สร้างและแก้ไข Note
-- รองรับ Markdown
-- รองรับหัวข้อ เช่น `#`, `##` และ `###`
-- รองรับ Bullet List, Checklist และ Code Block
-- Preview Markdown
-- Auto-save
-- Pin และ Archive Note
-
-ตัวอย่าง Markdown:
-
-```markdown
-# หัวข้อหลัก
-
-## ปัญหาที่พบ
-
-- ข้อมูลส่งไปไม่ครบ
-- ระบบไม่บันทึก Log
-
-## งานที่ต้องทำ
-
-- [ ] ตรวจสอบ Payload
-- [ ] แก้ไข Mapping
-- [x] ทดสอบ Database
-```
-
-### Phase 5 — Second Brain Features
-
-- Search
-- Tags
-- Collections
-- Recent Notes
-- Favorites
-- Internal Note Links
-- Backlinks
-- Export และ Import Backup
-
-### Phase 6 — Desktop Features
-
-- System Tray
-- Close to Tray
-- Auto Start พร้อม Windows
-- Global Quick Capture Shortcut
-- Mini Pomodoro Window
-- Always on Top
-- Windows Installer
-- Auto Update
 
 ---
 
@@ -235,52 +237,38 @@ SeBrain ใช้ SQLite เป็นฐานข้อมูลแบบ Local
 
 ข้อมูลจะอยู่ใน Application Data Directory ของระบบปฏิบัติการ ไม่ได้ถูกสร้างไว้ในโฟลเดอร์โปรเจกต์โดยตรง
 
-### Initial Database Tables
+Schema ถูกจัดการผ่าน `src/services/migrations.ts` และรันตอนเปิดแอป
 
-ในช่วงเริ่มต้น ระบบจะสร้างเฉพาะตารางที่จำเป็นก่อน
+### ตารางหลัก
 
-**inbox_items** — ใช้เก็บข้อมูลจาก Quick Capture
-
-```sql
-CREATE TABLE IF NOT EXISTS inbox_items (
-    id TEXT PRIMARY KEY,
-    content TEXT NOT NULL,
-    item_type TEXT NOT NULL DEFAULT 'inbox',
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-);
-```
-
-### ตารางที่จะเพิ่มในอนาคต
-
-- `tasks`
-- `notes`
-- `tags`
-- `note_tags`
-- `note_links`
-- `pomodoro_sessions`
-- `settings`
+| ตาราง | ใช้งาน |
+| --- | --- |
+| `inbox_items` | Quick Capture |
+| `tasks` | งานและสถานะ |
+| `notes` | Markdown Notes |
+| `pomodoro_sessions` | ประวัติ Focus Session |
+| `active_timer` | สถานะ Timer ปัจจุบัน |
+| `settings` | การตั้งค่าแอป |
+| `schema_migrations` | ติดตามเวอร์ชัน Migration |
 
 ---
 
-## Prerequisites
+## การติดตั้งและรันโปรเจกต์
 
-ก่อนเริ่มพัฒนา ต้องติดตั้งเครื่องมือต่อไปนี้
+ส่วนนี้รวมทุกขั้นตอนตั้งแต่เตรียมเครื่องมือ ติดตั้ง dependency จนถึงรันและ build แอป
 
-### Node.js
+### 1. สิ่งที่ต้องติดตั้งก่อน
 
-ตรวจสอบด้วยคำสั่ง:
+#### Node.js
 
 ```powershell
 node --version
 npm --version
 ```
 
-### Rust
+#### Rust
 
 Tauri ต้องใช้ Rust toolchain (`cargo`, `rustc`) ในการ build ส่วน Desktop
-
-**ติดตั้งบน Windows:**
 
 1. ดาวน์โหลดจาก [https://rustup.rs](https://rustup.rs) หรือใช้ winget:
 
@@ -306,113 +294,45 @@ $env:Path += ";$env:USERPROFILE\.cargo\bin"
 
 หรือเปิด Terminal ใหม่หลังติดตั้ง Rust ให้เรียบร้อย
 
-### Microsoft Visual Studio Build Tools
+#### Microsoft Visual Studio Build Tools
 
-ต้องติดตั้ง Workload **Desktop development with C++**
-
-และควรมี Component อย่างน้อย:
+ต้องติดตั้ง Workload **Desktop development with C++** และ Component อย่างน้อย:
 
 - MSVC v143 - VS 2022 C++ x64/x86 Build Tools
 - Windows 10 SDK หรือ Windows 11 SDK
 - C++ CMake Tools for Windows
 
-ติดตั้งด้วย winget:
-
 ```powershell
 winget install Microsoft.VisualStudio.2022.BuildTools
 ```
 
-### WebView2 Runtime
+#### WebView2 Runtime
 
 Windows รุ่นใหม่มักติดตั้ง WebView2 มาแล้ว หากไม่มี ให้ติดตั้ง [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) เพิ่ม
 
----
+### 2. Clone และติดตั้ง Dependency
 
-## Installation
+```powershell
+cd C:\project\sebrain
+npm install
+```
 
-1. Clone หรือเปิดโฟลเดอร์โปรเจกต์:
+### 3. รัน Development Mode
 
-   ```powershell
-   cd C:\project\sebrain
-   ```
-
-2. ติดตั้ง Dependency:
-
-   ```powershell
-   npm install
-   ```
-
-3. เปิด Development Mode:
-
-   ```powershell
-   npm run tauri dev
-   ```
+```powershell
+npm run tauri dev
+```
 
 เมื่อทำงานสำเร็จ จะเปิดหน้าต่าง Desktop App ของ SeBrain
 
 > **หมายเหตุ:** ครั้งแรกที่รัน `npm run tauri dev` อาจใช้เวลานาน เพราะ Cargo ต้องดาวน์โหลดและคอมไพล์ dependency ของ Rust
 
----
-
-## Adding SQLite Support
-
-เพิ่ม Tauri SQL Plugin:
-
-```powershell
-npm run tauri add sql
-```
-
-ตรวจสอบไฟล์ `src-tauri/Cargo.toml` ควรมี Dependency:
-
-```toml
-tauri-plugin-sql = { version = "2", features = ["sqlite"] }
-```
-
-ตรวจสอบไฟล์ `src-tauri/src/lib.rs` ควรมีการลงทะเบียน Plugin:
-
-```rust
-.plugin(tauri_plugin_sql::Builder::default().build())
-```
-
----
-
-## Database Service
-
-ตัวอย่างไฟล์ `src/services/database.ts`:
-
-```typescript
-import Database from "@tauri-apps/plugin-sql";
-
-let database: Database | null = null;
-
-export async function getDatabase(): Promise<Database> {
-  if (database) {
-    return database;
-  }
-
-  database = await Database.load("sqlite:sebrain.db");
-
-  await database.execute(`
-    CREATE TABLE IF NOT EXISTS inbox_items (
-      id TEXT PRIMARY KEY,
-      content TEXT NOT NULL,
-      item_type TEXT NOT NULL DEFAULT 'inbox',
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    )
-  `);
-
-  return database;
-}
-```
-
----
-
-## Development Commands
+### 4. คำสั่งอื่นที่ใช้บ่อย
 
 | คำสั่ง | คำอธิบาย |
 | --- | --- |
 | `npm run tauri dev` | เปิด Development Mode |
+| `npm run dev` | รัน Frontend อย่างเดียว (Vite) |
 | `npm run build` | ตรวจสอบ Frontend Build |
 | `cargo check --manifest-path src-tauri/Cargo.toml` | ตรวจสอบ Rust |
 | `npm run tauri build` | สร้าง Windows Installer |
@@ -433,11 +353,9 @@ src-tauri/target/release/bundle/
 - แยก SQL ออกจาก React Component
 - React Component เรียกข้อมูลผ่าน Repository เท่านั้น
 - สร้างตารางด้วย `CREATE TABLE IF NOT EXISTS`
-- เริ่มจาก Schema ขนาดเล็ก
-- หลีกเลี่ยงการทำทุกฟีเจอร์พร้อมกัน
+- เพิ่ม Database Migration เมื่อ Schema เปลี่ยน
 - ทุกฟีเจอร์ต้องรองรับการปิดและเปิดแอปใหม่
 - Pomodoro ต้องคำนวณเวลาจากเวลาสิ้นสุดจริง ไม่ใช้การลดตัวเลขทีละวินาทีเป็นแหล่งข้อมูลหลัก
-- เพิ่ม Database Migration เมื่อ Schema เริ่มเปลี่ยน
 - ทดสอบ Backup และ Restore ก่อนเปิดให้ผู้ใช้อื่นใช้
 
 ---
@@ -464,28 +382,9 @@ const remainingSeconds = Math.max(
 วิธีนี้ช่วยให้ Timer ไม่เพี้ยนเมื่อ:
 
 - เปลี่ยนหน้าต่าง
-- ปิดหน้าต่างไป System Tray
 - เครื่องเข้าสู่ Sleep
 - แอปถูกปิดแล้วเปิดใหม่
 - หน้าจอหยุดอัปเดตชั่วคราว
-
----
-
-## Current Milestone
-
-Milestone แรกของ SeBrain คือ **Quick Capture และ Inbox**
-
-เงื่อนไขที่ต้องผ่าน:
-
-1. เปิด SeBrain
-2. พิมพ์ข้อความ
-3. กด Enter
-4. ข้อมูลถูกบันทึกใน SQLite
-5. ปิดแอป
-6. เปิดใหม่
-7. ข้อมูลยังอยู่
-
-เมื่อ Milestone นี้ทำงานสมบูรณ์แล้ว จึงเริ่มพัฒนา Task และ Pomodoro ต่อ
 
 ---
 
@@ -515,7 +414,7 @@ UI อัปเดตทันที
 ค่อย Sync ไปยัง Server เมื่อมีอินเทอร์เน็ต
 ```
 
-แต่ในเวอร์ชันแรกจะยังไม่มี:
+แต่ในเวอร์ชันปัจจุบันยังไม่มี:
 
 - Login
 - Register
@@ -536,7 +435,7 @@ UI อัปเดตทันที
 | Framework | Tauri 2 |
 | Frontend | React + TypeScript |
 | Database | SQLite |
-| Current Stage | Initial Setup |
+| Current Stage | Core Features (Inbox, Tasks, Notes, Pomodoro) |
 
 ---
 
