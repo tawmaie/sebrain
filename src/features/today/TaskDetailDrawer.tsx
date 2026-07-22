@@ -34,6 +34,13 @@ interface TaskDetailDrawerProps {
 
 type NoteMode = "edit" | "preview";
 
+function formatNoteSavedTime(iso: string): string {
+  return new Intl.DateTimeFormat("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
+
 export function TaskDetailDrawer({
   task,
   pomodoroTaskId,
@@ -54,21 +61,31 @@ export function TaskDetailDrawer({
   const [noteContent, setNoteContent] = useState("");
   const [noteMode, setNoteMode] = useState<NoteMode>("edit");
   const [noteLoading, setNoteLoading] = useState(false);
-  const [noteSaving, setNoteSaving] = useState(false);
-  const noteDebounceRef = useRef<number | null>(null);
+  const [noteSaveError, setNoteSaveError] = useState(false);
+  const [lastNoteSavedAt, setLastNoteSavedAt] = useState<string | null>(null);
+  const progressNoteIdRef = useRef<string | null>(null);
+  const lastSavedNoteContentRef = useRef("");
 
   const loadProgressNote = useCallback(async (linkedNoteId: string | null) => {
     if (!linkedNoteId) {
+      progressNoteIdRef.current = null;
+      lastSavedNoteContentRef.current = "";
       setProgressNote(null);
       setNoteContent("");
+      setNoteSaveError(false);
+      setLastNoteSavedAt(null);
       return;
     }
 
     setNoteLoading(true);
     try {
       const note = await getNoteById(linkedNoteId);
+      progressNoteIdRef.current = note?.id ?? null;
+      lastSavedNoteContentRef.current = note?.contentMarkdown ?? "";
       setProgressNote(note);
       setNoteContent(note?.contentMarkdown ?? "");
+      setNoteSaveError(false);
+      setLastNoteSavedAt(note?.updatedAt ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -104,46 +121,47 @@ export function TaskDetailDrawer({
   }, [open, onClose]);
 
   useEffect(() => {
-    if (!progressNote || noteMode !== "edit") {
+    const noteId = progressNoteIdRef.current;
+    if (!noteId || noteMode !== "edit") {
       return;
     }
 
-    if (noteDebounceRef.current) {
-      window.clearTimeout(noteDebounceRef.current);
+    if (noteContent === lastSavedNoteContentRef.current) {
+      return;
     }
 
-    noteDebounceRef.current = window.setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
       void (async () => {
-        if (!progressNote || noteContent === progressNote.contentMarkdown) {
+        if (noteContent === lastSavedNoteContentRef.current) {
           return;
         }
 
-        setNoteSaving(true);
         try {
-          const updated = await updateNote(progressNote.id, {
-            contentMarkdown: noteContent,
-          });
-          setProgressNote(updated);
+          await updateNote(noteId, { contentMarkdown: noteContent });
+          lastSavedNoteContentRef.current = noteContent;
+          setLastNoteSavedAt(new Date().toISOString());
+          setNoteSaveError(false);
         } catch (err) {
+          setNoteSaveError(true);
           setError(err instanceof Error ? err.message : String(err));
-        } finally {
-          setNoteSaving(false);
         }
       })();
     }, 600);
 
-    return () => {
-      if (noteDebounceRef.current) {
-        window.clearTimeout(noteDebounceRef.current);
-      }
-    };
-  }, [noteContent, progressNote, noteMode]);
+    return () => window.clearTimeout(timeoutId);
+  }, [noteContent, noteMode]);
 
   if (!open || !task) {
     return null;
   }
 
   const isUpdating = saving;
+
+  const noteSaveStatusText = noteSaveError
+    ? "บันทึกไม่สำเร็จ"
+    : lastNoteSavedAt
+      ? `บันทึกแล้ว ${formatNoteSavedTime(lastNoteSavedAt)}`
+      : "";
 
   return (
     <>
@@ -256,17 +274,28 @@ export function TaskDetailDrawer({
           </div>
 
           <section className="mb-5 rounded-card border border-border bg-surface-muted p-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
                 <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
                   โน้ตความคืบหน้า
                 </p>
                 <p className="m-0 text-xs text-text-secondary">
                   บันทึกว่าทำอะไรไปแล้วระหว่างทำงาน
                 </p>
+                {progressNote ? (
+                  <p
+                    className={cn(
+                      "m-0 mt-1 min-h-4 text-[11px]",
+                      noteSaveError ? "text-danger" : "text-success",
+                    )}
+                    aria-live="polite"
+                  >
+                    {noteSaveStatusText || "\u00a0"}
+                  </p>
+                ) : null}
               </div>
               {progressNote ? (
-                <div className="flex gap-1">
+                <div className="flex shrink-0 gap-1">
                   <button
                     type="button"
                     className={noteMode === "edit" ? chipActive : chip}
@@ -288,22 +317,15 @@ export function TaskDetailDrawer({
             {noteLoading ? (
               <p className="m-0 text-sm text-text-secondary">กำลังโหลดโน้ต...</p>
             ) : progressNote ? (
-              <>
-                {noteMode === "edit" ? (
-                  <textarea
-                    className={cn(inputClass, "min-h-[180px] font-mono text-[13px]")}
-                    value={noteContent}
-                    onChange={(event) => setNoteContent(event.target.value)}
-                  />
-                ) : (
-                  <MarkdownPreview content={noteContent} />
-                )}
-                {noteSaving ? (
-                  <p className="mt-2 mb-0 text-xs text-text-secondary">
-                    กำลังบันทึกโน้ต...
-                  </p>
-                ) : null}
-              </>
+              noteMode === "edit" ? (
+                <textarea
+                  className={cn(inputClass, "min-h-[180px] font-mono text-[13px]")}
+                  value={noteContent}
+                  onChange={(event) => setNoteContent(event.target.value)}
+                />
+              ) : (
+                <MarkdownPreview content={noteContent} compact />
+              )
             ) : (
               <button
                 type="button"
@@ -314,8 +336,12 @@ export function TaskDetailDrawer({
                     setNoteLoading(true);
                     try {
                       const note = await ensureTaskProgressNote(task);
+                      progressNoteIdRef.current = note.id;
+                      lastSavedNoteContentRef.current = note.contentMarkdown;
                       setProgressNote(note);
                       setNoteContent(note.contentMarkdown);
+                      setNoteSaveError(false);
+                      setLastNoteSavedAt(note.updatedAt);
                       const updatedTask = await updateTask(task.id, {
                         linkedNoteId: note.id,
                       });
@@ -334,8 +360,10 @@ export function TaskDetailDrawer({
           </section>
 
           {error ? <p className="mb-4 text-xs text-danger">{error}</p> : null}
+        </div>
 
-          <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+        <footer className="shrink-0 border-t border-border bg-surface px-5 py-4">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               className={btnPrimary}
@@ -369,7 +397,7 @@ export function TaskDetailDrawer({
               ลบงาน
             </button>
           </div>
-        </div>
+        </footer>
       </aside>
 
       <ConfirmDialog
