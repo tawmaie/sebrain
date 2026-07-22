@@ -7,6 +7,7 @@ import {
   field,
   fieldLabel,
   input as inputClass,
+  masterDetailEmpty,
 } from "../../lib/ui";
 
 interface TaskEditorProps {
@@ -50,14 +51,14 @@ export function TaskEditor({
 
   if (!task) {
     return (
-      <div className="flex h-full min-h-[200px] items-center justify-center rounded-card border border-dashed border-border-strong text-text-secondary">
+      <div className={masterDetailEmpty}>
         <p>เลือกงานทางซ้ายเพื่อแก้ไข</p>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="min-h-0 flex-1 overflow-auto">
       <h3 className="mb-4 text-lg font-semibold">รายละเอียดงาน</h3>
       <label className={field}>
         <span className={fieldLabel}>ชื่องาน</span>

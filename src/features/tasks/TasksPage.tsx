@@ -11,7 +11,7 @@ import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { LoadingState } from "../../components/common/LoadingState";
 import { TaskList } from "./TaskList";
 import { TaskEditor } from "./TaskEditor";
-import { btnPrimary, cn, panelHeader, panelTitle } from "../../lib/ui";
+import { btnPrimary, cn, masterDetailList, masterDetailPage, masterDetailPanel, panelHeader, panelTitle } from "../../lib/ui";
 
 interface TasksPageProps {
   searchQuery: string;
@@ -67,8 +67,8 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
   const selected = tasks.find((task) => task.id === selectedId) ?? null;
 
   return (
-    <div className="grid h-full min-h-0 grid-cols-[minmax(300px,360px)_minmax(360px,1fr)] max-[1100px]:grid-cols-1">
-      <section className="min-h-0 overflow-auto border-r border-border bg-surface-muted p-5 max-[1100px]:max-h-[40%] max-[1100px]:border-r-0 max-[1100px]:border-b">
+    <div className={masterDetailPage}>
+      <section className={masterDetailList}>
         <div className={panelHeader}>
           <h2 className={panelTitle}>Tasks</h2>
           <button
@@ -119,7 +119,7 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
         ) : null}
       </section>
 
-      <section className="min-h-0 overflow-auto bg-surface p-5">
+      <section className={masterDetailPanel}>
         <TaskEditor
           task={selected}
           onSave={async (patch) => {

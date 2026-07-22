@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import type { SessionType } from "../../types/pomodoro";
 import type { Task } from "../../types/task";
-import type { Note } from "../../types/note";
+import type { Entry } from "../../types/entry";
 import { listTasks } from "../../repositories/taskRepository";
-import { listNotes } from "../../repositories/noteRepository";
+import { listEntries } from "../../repositories/entryRepository";
 import { LoadingState } from "../../components/common/LoadingState";
 import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { PomodoroTimer } from "./PomodoroTimer";
@@ -23,7 +23,7 @@ interface FocusPageProps {
 
 export function FocusPage({ pomodoro }: FocusPageProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Entry[]>([]);
   const [loadingMeta, setLoadingMeta] = useState(true);
   const [metaError, setMetaError] = useState<string | null>(null);
 
@@ -34,7 +34,7 @@ export function FocusPage({ pomodoro }: FocusPageProps) {
       try {
         const [taskRows, noteRows] = await Promise.all([
           listTasks(),
-          listNotes(),
+          listEntries({ type: "note" }),
         ]);
         setTasks(taskRows.filter((task) => task.status !== "done"));
         setNotes(noteRows);

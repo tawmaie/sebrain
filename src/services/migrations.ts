@@ -98,6 +98,28 @@ const migrations: Migration[] = [
         ON pomodoro_sessions(started_at DESC);
     `,
   },
+  {
+    version: 2,
+    sql: `
+      ALTER TABLE notes ADD COLUMN type TEXT NOT NULL DEFAULT 'note';
+      ALTER TABLE notes ADD COLUMN task_id TEXT;
+
+      UPDATE notes
+      SET type = 'task_progress',
+          task_id = (
+            SELECT tasks.id
+            FROM tasks
+            WHERE tasks.linked_note_id = notes.id
+            LIMIT 1
+          )
+      WHERE id IN (
+        SELECT linked_note_id FROM tasks WHERE linked_note_id IS NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_notes_type ON notes(type);
+      CREATE INDEX IF NOT EXISTS idx_notes_task_id ON notes(task_id);
+    `,
+  },
 ];
 
 export async function runMigrations(db: Database): Promise<void> {

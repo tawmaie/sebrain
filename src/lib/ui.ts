@@ -41,3 +41,16 @@ export const listRowMeta = "m-0 text-xs text-text-secondary";
 
 export const panelHeader = "mb-5 flex items-center justify-between gap-3";
 export const panelTitle = "m-0 text-[26px] font-bold tracking-[-0.01em]";
+
+/** Master-detail pages: Notes, Tasks, Journal */
+export const masterDetailPage =
+  "grid h-full min-h-0 grid-cols-[minmax(280px,360px)_minmax(0,1fr)] max-[1100px]:grid-cols-1 max-[1100px]:grid-rows-[minmax(0,36%)_minmax(0,1fr)]";
+
+export const masterDetailList =
+  "min-h-0 overflow-auto border-r border-border bg-surface-muted p-5 max-[1100px]:border-r-0 max-[1100px]:border-b";
+
+export const masterDetailPanel =
+  "flex min-h-0 flex-col overflow-hidden bg-surface p-5";
+
+export const masterDetailEmpty =
+  "flex flex-1 items-center justify-center rounded-card border border-dashed border-border-strong p-6 text-center text-text-secondary";

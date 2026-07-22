@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Note } from "../../types/note";
 import { MarkdownPreview } from "./MarkdownPreview";
-import { btn, btnDanger, chip, chipActive, cn } from "../../lib/ui";
+import { btn, btnDanger, chip, chipActive, cn, masterDetailEmpty } from "../../lib/ui";
 
 interface NoteEditorProps {
   note: Note | null;
@@ -80,14 +80,14 @@ export function NoteEditor({
 
   if (!note) {
     return (
-      <div className="flex h-full min-h-[200px] items-center justify-center rounded-card border border-dashed border-border-strong text-text-secondary">
+      <div className={masterDetailEmpty}>
         <p>เลือกโน้ตทางซ้ายเพื่อแก้ไข</p>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="mb-3 flex items-center justify-between gap-3">
         <input
           className="w-full !border-none !bg-transparent !p-1 text-lg font-semibold"
@@ -134,14 +134,14 @@ export function NoteEditor({
 
       <div
         className={cn(
-          "mt-2 grid min-h-80 flex-1 gap-3",
+          "mt-2 grid min-h-0 flex-1 gap-3 overflow-auto",
           mode === "split" && "grid-cols-2 max-[1100px]:grid-cols-1",
         )}
       >
         {mode !== "preview" ? (
-          <div>
+          <div className="flex min-h-0 flex-col">
             <textarea
-              className="min-h-80 w-full resize-y rounded-input border border-border-strong bg-surface px-3 py-[9px] font-mono text-sm leading-[1.7]"
+              className="min-h-[200px] w-full flex-1 resize-y rounded-input border border-border-strong bg-surface px-3 py-[9px] font-mono text-sm leading-[1.7] max-[1100px]:min-h-[180px]"
               value={content}
               onChange={(event) => setContent(event.target.value)}
               placeholder="เขียน Markdown ที่นี่..."
@@ -149,13 +149,13 @@ export function NoteEditor({
           </div>
         ) : null}
         {mode !== "edit" ? (
-          <div>
+          <div className="min-h-0 overflow-auto">
             <MarkdownPreview content={content} />
           </div>
         ) : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex shrink-0 flex-wrap gap-2">
         <button type="button" className={btn} onClick={() => void onTogglePin()}>
           {note.isPinned ? "เลิกปักหมุด" : "ปักหมุด"}
         </button>

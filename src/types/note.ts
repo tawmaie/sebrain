@@ -1,16 +1,7 @@
-export interface Note {
-  id: string;
-  title: string;
-  contentMarkdown: string;
-  isPinned: boolean;
-  isArchived: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Entry, EntryInput } from "./entry";
 
-export interface NoteInput {
-  title: string;
-  contentMarkdown?: string;
-  isPinned?: boolean;
-  isArchived?: boolean;
-}
+/** @deprecated Use Entry from ./entry */
+export type Note = Entry;
+
+/** @deprecated Use EntryInput from ./entry */
+export type NoteInput = EntryInput;

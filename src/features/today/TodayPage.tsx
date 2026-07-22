@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Entry } from "../../types/entry";
 import type { Task, TaskStatus } from "../../types/task";
-import type { Note } from "../../types/note";
 import {
   countFocusSessionsToday,
   createTask,
@@ -10,7 +10,7 @@ import {
   updateTask,
 } from "../../repositories/taskRepository";
 import { getFocusMinutesToday } from "../../repositories/pomodoroRepository";
-import { listNotes } from "../../repositories/noteRepository";
+import { listEntries } from "../../repositories/entryRepository";
 import { createInboxItem } from "../../repositories/inboxRepository";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ErrorMessage } from "../../components/common/ErrorMessage";
@@ -31,7 +31,7 @@ interface TodayPageProps {
 export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
   const [doing, setDoing] = useState<Task[]>([]);
   const [today, setToday] = useState<Task[]>([]);
-  const [recentNotes, setRecentNotes] = useState<Note[]>([]);
+  const [recentNotes, setRecentNotes] = useState<Entry[]>([]);
   const [focusCount, setFocusCount] = useState(0);
   const [todayStats, setTodayStats] = useState<{ done: number; total: number }>(
     { done: 0, total: 0 },
@@ -57,7 +57,7 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
           listTasks("doing"),
           listTasks("today"),
           countFocusSessionsToday(),
-          listNotes(),
+          listEntries({ type: "note" }),
           getTodayTaskStats(),
           getFocusMinutesToday(),
         ]);

@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Note } from "../../types/note";
+import type { Entry } from "../../types/entry";
 import {
-  createNote,
-  deleteNote,
-  listNotes,
-  updateNote,
-} from "../../repositories/noteRepository";
+  createEntry,
+  deleteEntry,
+  listEntries,
+  updateEntry,
+} from "../../repositories/entryRepository";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { LoadingState } from "../../components/common/LoadingState";
-import { NoteList } from "./NoteList";
-import { NoteEditor } from "./NoteEditor";
+import { NoteList } from "../notes/NoteList";
+import { NoteEditor } from "../notes/NoteEditor";
+import {
+  dailyEntryTemplate,
+  formatDailyTitle,
+} from "../../lib/entryLabels";
 import {
   btnPrimary,
   chip,
@@ -22,12 +26,12 @@ import {
   panelTitle,
 } from "../../lib/ui";
 
-interface NotesPageProps {
+interface JournalPageProps {
   searchQuery: string;
 }
 
-export function NotesPage({ searchQuery }: NotesPageProps) {
-  const [notes, setNotes] = useState<Note[]>([]);
+export function JournalPage({ searchQuery }: JournalPageProps) {
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -38,10 +42,13 @@ export function NotesPage({ searchQuery }: NotesPageProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await listNotes({ includeArchived: showArchived });
-      setNotes(data);
+      const data = await listEntries({
+        type: "daily",
+        includeArchived: showArchived,
+      });
+      setEntries(data);
       setSelectedId((current) => {
-        if (current && data.some((note) => note.id === current)) {
+        if (current && data.some((entry) => entry.id === current)) {
           return current;
         }
         return data[0]?.id ?? null;
@@ -60,32 +67,38 @@ export function NotesPage({ searchQuery }: NotesPageProps) {
   const filtered = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) {
-      return notes;
+      return entries;
     }
-    return notes.filter(
-      (note) =>
-        note.title.toLowerCase().includes(query) ||
-        note.contentMarkdown.toLowerCase().includes(query),
+    return entries.filter(
+      (entry) =>
+        entry.title.toLowerCase().includes(query) ||
+        entry.contentMarkdown.toLowerCase().includes(query),
     );
-  }, [notes, searchQuery]);
+  }, [entries, searchQuery]);
 
-  const selected = notes.find((note) => note.id === selectedId) ?? null;
+  const selected = entries.find((entry) => entry.id === selectedId) ?? null;
 
   const handleSave = useCallback(
     async (patch: { title: string; contentMarkdown: string }) => {
-      if (!selectedId) return;
-      await updateNote(selectedId, patch);
-      const data = await listNotes({ includeArchived: showArchived });
-      setNotes(data);
+      if (!selectedId) {
+        return;
+      }
+      await updateEntry(selectedId, patch);
+      await load();
     },
-    [selectedId, showArchived],
+    [selectedId, load],
   );
 
   return (
     <div className={masterDetailPage}>
       <section className={masterDetailList}>
         <div className={panelHeader}>
-          <h2 className={panelTitle}>Notes</h2>
+          <div>
+            <h2 className={panelTitle}>Journal</h2>
+            <p className="m-0 mt-1 text-sm text-text-secondary">
+              บันทึกประจำวัน
+            </p>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -100,7 +113,11 @@ export function NotesPage({ searchQuery }: NotesPageProps) {
               onClick={() => {
                 void (async () => {
                   try {
-                    const created = await createNote({ title: "โน้ตไม่มีชื่อ" });
+                    const created = await createEntry({
+                      type: "daily",
+                      title: formatDailyTitle(),
+                      contentMarkdown: dailyEntryTemplate(),
+                    });
                     await load();
                     setSelectedId(created.id);
                   } catch (err) {
@@ -109,7 +126,7 @@ export function NotesPage({ searchQuery }: NotesPageProps) {
                 })();
               }}
             >
-              สร้างโน้ต
+              บันทึกวันนี้
             </button>
           </div>
         </div>
@@ -132,13 +149,17 @@ export function NotesPage({ searchQuery }: NotesPageProps) {
           note={selected}
           onSave={handleSave}
           onTogglePin={async () => {
-            if (!selected) return;
-            await updateNote(selected.id, { isPinned: !selected.isPinned });
+            if (!selected) {
+              return;
+            }
+            await updateEntry(selected.id, { isPinned: !selected.isPinned });
             await load();
           }}
           onToggleArchive={async () => {
-            if (!selected) return;
-            await updateNote(selected.id, {
+            if (!selected) {
+              return;
+            }
+            await updateEntry(selected.id, {
               isArchived: !selected.isArchived,
             });
             await load();
@@ -153,16 +174,18 @@ export function NotesPage({ searchQuery }: NotesPageProps) {
 
       <ConfirmDialog
         open={deleteId !== null}
-        title="ลบโน้ตนี้"
-        message="โน้ตนี้จะถูกลบอย่างถาวรและกู้กลับไม่ได้"
-        confirmLabel="ลบโน้ต"
+        title="ลบบันทึกนี้"
+        message="บันทึก Journal นี้จะถูกลบอย่างถาวรและกู้กลับไม่ได้"
+        confirmLabel="ลบบันทึก"
         destructive
         onCancel={() => setDeleteId(null)}
         onConfirm={() => {
           void (async () => {
-            if (!deleteId) return;
+            if (!deleteId) {
+              return;
+            }
             try {
-              await deleteNote(deleteId);
+              await deleteEntry(deleteId);
               setDeleteId(null);
               setSelectedId(null);
               await load();

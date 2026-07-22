@@ -9,6 +9,8 @@ import { TodayPage } from "./features/today/TodayPage";
 import { InboxPage } from "./features/inbox/InboxPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { NotesPage } from "./features/notes/NotesPage";
+import { JournalPage } from "./features/journal/JournalPage";
+import { SearchPage } from "./features/search/SearchPage";
 import { FocusPage } from "./features/focus/FocusPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { usePomodoro } from "./hooks/usePomodoro";
@@ -123,20 +125,32 @@ function App() {
       inboxCount={inboxCount}
       searchInputRef={searchInputRef}
     >
-      {view === "today" ? (
+      {searchQuery.trim() ? (
+        <SearchPage
+          query={searchQuery}
+          onNavigate={(nextView) => {
+            setView(nextView);
+            setSearchQuery("");
+          }}
+        />
+      ) : null}
+      {!searchQuery.trim() && view === "today" ? (
         <TodayPage pomodoro={pomodoro} captureRequestId={captureRequestId} />
       ) : null}
-      {view === "inbox" ? (
+      {!searchQuery.trim() && view === "inbox" ? (
         <InboxPage
           searchQuery={searchQuery}
           captureRequestId={captureRequestId}
           onCountChange={refreshInboxCount}
         />
       ) : null}
-      {view === "tasks" ? <TasksPage searchQuery={searchQuery} /> : null}
-      {view === "notes" ? <NotesPage searchQuery={searchQuery} /> : null}
-      {view === "focus" ? <FocusPage pomodoro={pomodoro} /> : null}
-      {view === "settings" ? (
+      {!searchQuery.trim() && view === "tasks" ? <TasksPage searchQuery={searchQuery} /> : null}
+      {!searchQuery.trim() && view === "notes" ? <NotesPage searchQuery={searchQuery} /> : null}
+      {!searchQuery.trim() && view === "journal" ? (
+        <JournalPage searchQuery={searchQuery} />
+      ) : null}
+      {!searchQuery.trim() && view === "focus" ? <FocusPage pomodoro={pomodoro} /> : null}
+      {!searchQuery.trim() && view === "settings" ? (
         <SettingsPage onSaved={() => void pomodoro.reloadSettings()} />
       ) : null}
     </AppShell>

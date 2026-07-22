@@ -23,7 +23,7 @@ export function Topbar({
           className={input}
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="ค้นหา Task, Note, Inbox... (Ctrl+K)"
+          placeholder="ค้นหาทุกอย่าง... Inbox, Tasks, Notes, Journal (Ctrl+K)"
           aria-label="Search"
         />
       </div>

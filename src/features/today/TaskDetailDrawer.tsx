@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import type { Note } from "../../types/note";
+import type { Entry } from "../../types/entry";
 import type { Task, TaskStatus } from "../../types/task";
-import { getNoteById, updateNote } from "../../repositories/noteRepository";
+import {
+  getEntryById,
+  getTaskProgressEntry,
+  updateEntry,
+} from "../../repositories/entryRepository";
 import { updateTask } from "../../repositories/taskRepository";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { MarkdownPreview } from "../notes/MarkdownPreview";
-import { ensureTaskProgressNote } from "./taskNoteHelpers";
+import { ensureTaskProgressEntry } from "./taskNoteHelpers";
 import {
   btn,
   btnDanger,
@@ -57,7 +61,7 @@ export function TaskDetailDrawer({
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const [progressNote, setProgressNote] = useState<Note | null>(null);
+  const [progressEntry, setProgressEntry] = useState<Entry | null>(null);
   const [noteContent, setNoteContent] = useState("");
   const [noteMode, setNoteMode] = useState<NoteMode>("edit");
   const [noteLoading, setNoteLoading] = useState(false);
@@ -66,26 +70,30 @@ export function TaskDetailDrawer({
   const progressNoteIdRef = useRef<string | null>(null);
   const lastSavedNoteContentRef = useRef("");
 
-  const loadProgressNote = useCallback(async (linkedNoteId: string | null) => {
-    if (!linkedNoteId) {
-      progressNoteIdRef.current = null;
-      lastSavedNoteContentRef.current = "";
-      setProgressNote(null);
-      setNoteContent("");
-      setNoteSaveError(false);
-      setLastNoteSavedAt(null);
-      return;
-    }
-
+  const loadProgressEntry = useCallback(async (currentTask: Task) => {
     setNoteLoading(true);
     try {
-      const note = await getNoteById(linkedNoteId);
-      progressNoteIdRef.current = note?.id ?? null;
-      lastSavedNoteContentRef.current = note?.contentMarkdown ?? "";
-      setProgressNote(note);
-      setNoteContent(note?.contentMarkdown ?? "");
+      let entry = await getTaskProgressEntry(currentTask.id);
+      if (!entry && currentTask.linkedNoteId) {
+        entry = await getEntryById(currentTask.linkedNoteId);
+      }
+
+      if (!entry) {
+        progressNoteIdRef.current = null;
+        lastSavedNoteContentRef.current = "";
+        setProgressEntry(null);
+        setNoteContent("");
+        setNoteSaveError(false);
+        setLastNoteSavedAt(null);
+        return;
+      }
+
+      progressNoteIdRef.current = entry.id;
+      lastSavedNoteContentRef.current = entry.contentMarkdown;
+      setProgressEntry(entry);
+      setNoteContent(entry.contentMarkdown);
       setNoteSaveError(false);
-      setLastNoteSavedAt(note?.updatedAt ?? null);
+      setLastNoteSavedAt(entry.updatedAt);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -102,8 +110,8 @@ export function TaskDetailDrawer({
     setDescription(task.description);
     setEstimatedPomodoros(task.estimatedPomodoros);
     setError(null);
-    void loadProgressNote(task.linkedNoteId);
-  }, [task, open, loadProgressNote]);
+    void loadProgressEntry(task);
+  }, [task, open, loadProgressEntry]);
 
   useEffect(() => {
     if (!open) {
@@ -137,7 +145,7 @@ export function TaskDetailDrawer({
         }
 
         try {
-          await updateNote(noteId, { contentMarkdown: noteContent });
+          await updateEntry(noteId, { contentMarkdown: noteContent });
           lastSavedNoteContentRef.current = noteContent;
           setLastNoteSavedAt(new Date().toISOString());
           setNoteSaveError(false);
@@ -282,7 +290,7 @@ export function TaskDetailDrawer({
                 <p className="m-0 text-xs text-text-secondary">
                   บันทึกว่าทำอะไรไปแล้วระหว่างทำงาน
                 </p>
-                {progressNote ? (
+                {progressEntry ? (
                   <p
                     className={cn(
                       "m-0 mt-1 min-h-4 text-[11px]",
@@ -294,7 +302,7 @@ export function TaskDetailDrawer({
                   </p>
                 ) : null}
               </div>
-              {progressNote ? (
+              {progressEntry ? (
                 <div className="flex shrink-0 gap-1">
                   <button
                     type="button"
@@ -316,7 +324,7 @@ export function TaskDetailDrawer({
 
             {noteLoading ? (
               <p className="m-0 text-sm text-text-secondary">กำลังโหลดโน้ต...</p>
-            ) : progressNote ? (
+            ) : progressEntry ? (
               noteMode === "edit" ? (
                 <textarea
                   className={cn(inputClass, "min-h-[180px] font-mono text-[13px]")}
@@ -335,15 +343,15 @@ export function TaskDetailDrawer({
                   void (async () => {
                     setNoteLoading(true);
                     try {
-                      const note = await ensureTaskProgressNote(task);
-                      progressNoteIdRef.current = note.id;
-                      lastSavedNoteContentRef.current = note.contentMarkdown;
-                      setProgressNote(note);
-                      setNoteContent(note.contentMarkdown);
+                      const entry = await ensureTaskProgressEntry(task);
+                      progressNoteIdRef.current = entry.id;
+                      lastSavedNoteContentRef.current = entry.contentMarkdown;
+                      setProgressEntry(entry);
+                      setNoteContent(entry.contentMarkdown);
                       setNoteSaveError(false);
-                      setLastNoteSavedAt(note.updatedAt);
+                      setLastNoteSavedAt(entry.updatedAt);
                       const updatedTask = await updateTask(task.id, {
-                        linkedNoteId: note.id,
+                        linkedNoteId: entry.id,
                       });
                       onTaskUpdated(updatedTask);
                     } catch (err) {
@@ -403,7 +411,7 @@ export function TaskDetailDrawer({
       <ConfirmDialog
         open={showDeleteConfirm}
         title="ลบงานนี้?"
-        message="งานและการเชื่อมโยงกับตัวจับเวลาจะถูกลบ โน้ตที่ผูกไว้จะยังคงอยู่"
+        message="งานและการเชื่อมโยงกับตัวจับเวลาจะถูกลบ บันทึกความคืบหน้าจะยังคงอยู่"
         confirmLabel="ลบงาน"
         destructive
         onCancel={() => setShowDeleteConfirm(false)}
