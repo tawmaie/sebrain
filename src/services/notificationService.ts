@@ -1,12 +1,26 @@
-/**
- * Notification stub — designed so a real Windows notification plugin
- * can be plugged in later without changing Pomodoro call sites.
- */
+import {
+  isPermissionGranted,
+  requestPermission,
+  sendNotification,
+} from "@tauri-apps/plugin-notification";
+
 export async function notifySessionCompleted(
   title: string,
   body: string,
 ): Promise<void> {
-  if (typeof console !== "undefined") {
-    console.info(`[notification] ${title}: ${body}`);
+  try {
+    let granted = await isPermissionGranted();
+    if (!granted) {
+      const permission = await requestPermission();
+      granted = permission === "granted";
+    }
+
+    if (granted) {
+      sendNotification({ title, body });
+    }
+  } catch (err) {
+    if (typeof console !== "undefined") {
+      console.warn("[notification] failed to send:", err);
+    }
   }
 }

@@ -35,6 +35,28 @@ function durationForType(
   return settings.longBreakDurationSeconds;
 }
 
+function sessionNotificationText(sessionType: SessionType): {
+  title: string;
+  body: string;
+} {
+  if (sessionType === "focus") {
+    return {
+      title: "จบรอบโฟกัสแล้ว",
+      body: "พักสักครู่แล้วเริ่มรอบถัดไปได้เลย",
+    };
+  }
+  if (sessionType === "short_break") {
+    return {
+      title: "พักสั้นเสร็จแล้ว",
+      body: "พร้อมเริ่มโฟกัสรอบถัดไป",
+    };
+  }
+  return {
+    title: "พักยาวเสร็จแล้ว",
+    body: "พร้อมเริ่มโฟกัสรอบถัดไป",
+  };
+}
+
 export function usePomodoro() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [status, setStatus] = useState<TimerStatus>("idle");
@@ -48,6 +70,7 @@ export function usePomodoro() {
   const [sessions, setSessions] = useState<PomodoroSession[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [lastCompletedAt, setLastCompletedAt] = useState<string | null>(null);
 
   const finalizingRef = useRef(false);
   const sessionIdRef = useRef<string | null>(null);
@@ -133,12 +156,11 @@ export function usePomodoro() {
         setRemainingSeconds(timer.durationSeconds);
 
         if (settingsRef.current?.notificationEnabled) {
-          await notifySessionCompleted(
-            "Pomodoro completed",
-            `${timer.sessionType.replace("_", " ")} finished`,
-          );
+          const { title, body } = sessionNotificationText(timer.sessionType);
+          await notifySessionCompleted(title, body);
         }
 
+        setLastCompletedAt(endedAt);
         await refreshSessions();
       } finally {
         finalizingRef.current = false;
@@ -445,5 +467,6 @@ export function usePomodoro() {
     finishEarly,
     reloadSettings,
     refreshSessions,
+    lastCompletedAt,
   };
 }

@@ -19,7 +19,7 @@ import { QuickCapture } from "../inbox/QuickCapture";
 import { PomodoroTimer } from "../focus/PomodoroTimer";
 import { TaskDetailDrawer } from "./TaskDetailDrawer";
 import type { usePomodoro } from "../../hooks/usePomodoro";
-import { btnPrimary, cn } from "../../lib/ui";
+import { btnPrimary, cn, field, input as inputClass } from "../../lib/ui";
 
 type PomodoroApi = ReturnType<typeof usePomodoro>;
 
@@ -80,6 +80,13 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
   }, [load]);
 
   useEffect(() => {
+    if (!pomodoro.lastCompletedAt) {
+      return;
+    }
+    void load();
+  }, [pomodoro.lastCompletedAt, load]);
+
+  useEffect(() => {
     if (captureRequestId > 0) {
       setFocusCapture(true);
 
@@ -101,9 +108,19 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
   );
 
   const focusTask = useMemo(
-    () => doing.find((task) => task.id === pomodoro.taskId),
-    [doing, pomodoro.taskId],
+    () => allTasks.find((task) => task.id === pomodoro.taskId),
+    [allTasks, pomodoro.taskId],
   );
+
+  const timerLocked =
+    pomodoro.status === "running" || pomodoro.status === "paused";
+
+  const selectFocusTask = (taskId: string) => {
+    if (timerLocked) {
+      return;
+    }
+    pomodoro.setTaskId(taskId);
+  };
 
   const currentDate = useMemo(
     () =>
@@ -306,6 +323,27 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                 onReset={() => void pomodoro.reset()}
                 onFinishEarly={() => void pomodoro.finishEarly()}
               />
+
+              <label className={cn(field, "mb-0 mt-4")}>
+                <span className="text-xs font-medium text-text-secondary">
+                  งานที่โฟกัส
+                </span>
+                <select
+                  className={inputClass}
+                  value={pomodoro.taskId ?? ""}
+                  disabled={timerLocked}
+                  onChange={(event) =>
+                    pomodoro.setTaskId(event.target.value || null)
+                  }
+                >
+                  <option value="">ไม่ผูกกับงาน</option>
+                  {allTasks.map((task) => (
+                    <option key={task.id} value={task.id}>
+                      {task.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </section>
 
             <section className="min-h-[390px] rounded-modal border border-border bg-surface p-5 max-[1024px]:min-h-0">
@@ -339,12 +377,27 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                           "flex items-center gap-3 rounded-card border border-border bg-surface p-3 transition-[border-color,transform,box-shadow] duration-150 hover:-translate-y-px hover:border-border-strong hover:shadow-[0_8px_22px_rgba(0,0,0,0.05)] max-[640px]:flex-col max-[640px]:items-stretch",
                           isSelected &&
                             "border-text-primary shadow-[inset_3px_0_0_var(--color-text-primary)]",
+                          !timerLocked && "cursor-pointer",
                         )}
+                        onClick={() => selectFocusTask(task.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            selectFocusTask(task.id);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={timerLocked ? -1 : 0}
+                        aria-pressed={isSelected}
+                        aria-label={`เลือกโฟกัสกับงาน ${task.title}`}
                       >
                         <button
                           type="button"
                           className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-left"
-                          onClick={() => openTaskDrawer(task.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openTaskDrawer(task.id);
+                          }}
                         >
                           <div className="flex items-center gap-2">
                             <span
@@ -402,7 +455,8 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                             type="button"
                             className="min-h-9 rounded-button border border-border bg-surface px-3 text-xs font-semibold text-text-primary transition-[border-color,background-color] duration-[120ms] hover:border-border-strong active:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 max-[640px]:flex-1"
                             disabled={isUpdating}
-                            onClick={() => {
+                            onClick={(event) => {
+                              event.stopPropagation();
                               void changeTaskStatus(task.id, "today");
                             }}
                           >
@@ -412,7 +466,8 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                             type="button"
                             className="min-h-9 rounded-button border border-border bg-surface px-3 text-xs font-semibold text-text-primary transition-[border-color,background-color] duration-[120ms] hover:border-border-strong active:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 max-[640px]:flex-1"
                             disabled={isUpdating}
-                            onClick={() => {
+                            onClick={(event) => {
+                              event.stopPropagation();
                               void changeTaskStatus(task.id, "done");
                             }}
                           >
