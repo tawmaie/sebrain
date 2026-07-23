@@ -1,23 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { X } from "lucide-react";
-import type { Entry } from "../../types/entry";
 import type { Task, TaskStatus } from "../../types/task";
-import {
-  getEntryById,
-  getTaskProgressEntry,
-  updateEntry,
-} from "../../repositories/entryRepository";
+import type { TaskLogEntry } from "../../types/taskLog";
 import { updateTask } from "../../repositories/taskRepository";
+import {
+  createTaskLogEntry,
+  deleteTaskLogEntry,
+  listTaskLogEntries,
+} from "../../repositories/taskLogRepository";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
-import { MarkdownPreview } from "../notes/MarkdownPreview";
-import { ensureTaskProgressEntry } from "./taskNoteHelpers";
+import { WorkLogCompose } from "../log/WorkLogCompose";
+import { WorkLogFeed } from "../log/WorkLogFeed";
 import {
   btn,
   btnDanger,
   btnPrimary,
-  chip,
-  chipActive,
-  cn,
   field,
   fieldLabel,
   input as inputClass,
@@ -36,15 +33,6 @@ interface TaskDetailDrawerProps {
   onDelete: (taskId: string) => Promise<void>;
 }
 
-type NoteMode = "edit" | "preview";
-
-function formatNoteSavedTime(iso: string): string {
-  return new Intl.DateTimeFormat("th-TH", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
-
 export function TaskDetailDrawer({
   task,
   pomodoroTaskId,
@@ -61,43 +49,18 @@ export function TaskDetailDrawer({
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const [progressEntry, setProgressEntry] = useState<Entry | null>(null);
-  const [noteContent, setNoteContent] = useState("");
-  const [noteMode, setNoteMode] = useState<NoteMode>("edit");
-  const [noteLoading, setNoteLoading] = useState(false);
-  const [noteSaveError, setNoteSaveError] = useState(false);
-  const [lastNoteSavedAt, setLastNoteSavedAt] = useState<string | null>(null);
-  const progressNoteIdRef = useRef<string | null>(null);
-  const lastSavedNoteContentRef = useRef("");
+  const [logEntries, setLogEntries] = useState<TaskLogEntry[]>([]);
+  const [logLoading, setLogLoading] = useState(false);
 
-  const loadProgressEntry = useCallback(async (currentTask: Task) => {
-    setNoteLoading(true);
+  const loadLogs = useCallback(async (taskId: string) => {
+    setLogLoading(true);
     try {
-      let entry = await getTaskProgressEntry(currentTask.id);
-      if (!entry && currentTask.linkedNoteId) {
-        entry = await getEntryById(currentTask.linkedNoteId);
-      }
-
-      if (!entry) {
-        progressNoteIdRef.current = null;
-        lastSavedNoteContentRef.current = "";
-        setProgressEntry(null);
-        setNoteContent("");
-        setNoteSaveError(false);
-        setLastNoteSavedAt(null);
-        return;
-      }
-
-      progressNoteIdRef.current = entry.id;
-      lastSavedNoteContentRef.current = entry.contentMarkdown;
-      setProgressEntry(entry);
-      setNoteContent(entry.contentMarkdown);
-      setNoteSaveError(false);
-      setLastNoteSavedAt(entry.updatedAt);
+      const entries = await listTaskLogEntries(taskId);
+      setLogEntries(entries);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setNoteLoading(false);
+      setLogLoading(false);
     }
   }, []);
 
@@ -110,8 +73,8 @@ export function TaskDetailDrawer({
     setDescription(task.description);
     setEstimatedPomodoros(task.estimatedPomodoros);
     setError(null);
-    void loadProgressEntry(task);
-  }, [task, open, loadProgressEntry]);
+    void loadLogs(task.id);
+  }, [task, open, loadLogs]);
 
   useEffect(() => {
     if (!open) {
@@ -128,48 +91,11 @@ export function TaskDetailDrawer({
     return () => window.removeEventListener("keydown", handleKeydown);
   }, [open, onClose]);
 
-  useEffect(() => {
-    const noteId = progressNoteIdRef.current;
-    if (!noteId || noteMode !== "edit") {
-      return;
-    }
-
-    if (noteContent === lastSavedNoteContentRef.current) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      void (async () => {
-        if (noteContent === lastSavedNoteContentRef.current) {
-          return;
-        }
-
-        try {
-          await updateEntry(noteId, { contentMarkdown: noteContent });
-          lastSavedNoteContentRef.current = noteContent;
-          setLastNoteSavedAt(new Date().toISOString());
-          setNoteSaveError(false);
-        } catch (err) {
-          setNoteSaveError(true);
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      })();
-    }, 600);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [noteContent, noteMode]);
-
   if (!open || !task) {
     return null;
   }
 
   const isUpdating = saving;
-
-  const noteSaveStatusText = noteSaveError
-    ? "บันทึกไม่สำเร็จ"
-    : lastNoteSavedAt
-      ? `บันทึกแล้ว ${formatNoteSavedTime(lastNoteSavedAt)}`
-      : "";
 
   return (
     <>
@@ -180,7 +106,7 @@ export function TaskDetailDrawer({
       />
 
       <aside
-        className="fixed top-0 right-0 z-50 flex h-full w-[min(480px,100vw)] flex-col border-l border-border bg-surface shadow-[-8px_0_32px_rgba(0,0,0,0.12)]"
+        className="fixed top-0 right-0 z-50 flex h-full w-[min(520px,100vw)] flex-col border-l border-border bg-surface shadow-[-8px_0_32px_rgba(0,0,0,0.12)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="task-detail-title"
@@ -223,7 +149,7 @@ export function TaskDetailDrawer({
             <span className={fieldLabel}>รายละเอียด</span>
             <textarea
               className={inputClass}
-              rows={4}
+              rows={3}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="อธิบายงาน เป้าหมาย หรือขั้นตอนที่ต้องทำ..."
@@ -282,89 +208,33 @@ export function TaskDetailDrawer({
           </div>
 
           <section className="mb-5 rounded-card border border-border bg-surface-muted p-4">
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
-                  โน้ตความคืบหน้า
-                </p>
-                <p className="m-0 text-xs text-text-secondary">
-                  บันทึกว่าทำอะไรไปแล้วระหว่างทำงาน
-                </p>
-                {progressEntry ? (
-                  <p
-                    className={cn(
-                      "m-0 mt-1 min-h-4 text-[11px]",
-                      noteSaveError ? "text-danger" : "text-success",
-                    )}
-                    aria-live="polite"
-                  >
-                    {noteSaveStatusText || "\u00a0"}
-                  </p>
-                ) : null}
-              </div>
-              {progressEntry ? (
-                <div className="flex shrink-0 gap-1">
-                  <button
-                    type="button"
-                    className={noteMode === "edit" ? chipActive : chip}
-                    onClick={() => setNoteMode("edit")}
-                  >
-                    แก้ไข
-                  </button>
-                  <button
-                    type="button"
-                    className={noteMode === "preview" ? chipActive : chip}
-                    onClick={() => setNoteMode("preview")}
-                  >
-                    ดูตัวอย่าง
-                  </button>
-                </div>
-              ) : null}
+            <div className="mb-3">
+              <p className="mb-1 text-[11px] font-bold tracking-[0.12em] text-text-secondary uppercase">
+                บันทึกการทำงาน
+              </p>
+              <p className="m-0 text-xs text-text-secondary">
+                จดสิ่งที่ทำกับเคสนี้ รองรับคำสั่ง SQL และอักขระพิเศษ
+              </p>
             </div>
 
-            {noteLoading ? (
-              <p className="m-0 text-sm text-text-secondary">กำลังโหลดโน้ต...</p>
-            ) : progressEntry ? (
-              noteMode === "edit" ? (
-                <textarea
-                  className={cn(inputClass, "min-h-[180px] font-mono text-[13px]")}
-                  value={noteContent}
-                  onChange={(event) => setNoteContent(event.target.value)}
-                />
-              ) : (
-                <MarkdownPreview content={noteContent} compact />
-              )
-            ) : (
-              <button
-                type="button"
-                className={btn}
-                disabled={noteLoading}
-                onClick={() => {
-                  void (async () => {
-                    setNoteLoading(true);
-                    try {
-                      const entry = await ensureTaskProgressEntry(task);
-                      progressNoteIdRef.current = entry.id;
-                      lastSavedNoteContentRef.current = entry.contentMarkdown;
-                      setProgressEntry(entry);
-                      setNoteContent(entry.contentMarkdown);
-                      setNoteSaveError(false);
-                      setLastNoteSavedAt(entry.updatedAt);
-                      const updatedTask = await updateTask(task.id, {
-                        linkedNoteId: entry.id,
-                      });
-                      onTaskUpdated(updatedTask);
-                    } catch (err) {
-                      setError(err instanceof Error ? err.message : String(err));
-                    } finally {
-                      setNoteLoading(false);
-                    }
-                  })();
+            <WorkLogCompose
+              onSubmit={async (body) => {
+                await createTaskLogEntry({ taskId: task.id, body });
+                await loadLogs(task.id);
+              }}
+            />
+
+            <div className="mt-4 border-t border-border pt-4">
+              <WorkLogFeed
+                entries={logEntries}
+                loading={logLoading}
+                onDelete={async (id) => {
+                  await deleteTaskLogEntry(id);
+                  await loadLogs(task.id);
                 }}
-              >
-                สร้างโน้ตความคืบหน้า
-              </button>
-            )}
+                emptyTitle="ยังไม่มีบันทึกสำหรับเคสนี้"
+              />
+            </div>
           </section>
 
           {error ? <p className="mb-4 text-xs text-danger">{error}</p> : null}
@@ -411,7 +281,7 @@ export function TaskDetailDrawer({
       <ConfirmDialog
         open={showDeleteConfirm}
         title="ลบงานนี้?"
-        message="งานและการเชื่อมโยงกับตัวจับเวลาจะถูกลบ บันทึกความคืบหน้าจะยังคงอยู่"
+        message="งานและการเชื่อมโยงกับตัวจับเวลาจะถูกลบ บันทึกการทำงานจะยังคงอยู่"
         confirmLabel="ลบงาน"
         destructive
         onCancel={() => setShowDeleteConfirm(false)}

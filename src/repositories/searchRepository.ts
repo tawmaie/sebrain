@@ -4,8 +4,9 @@ import type { TaskStatus } from "../types/task";
 import { listInboxItems } from "./inboxRepository";
 import { listEntries } from "./entryRepository";
 import { listTasks } from "./taskRepository";
+import { searchTaskLogEntries } from "./taskLogRepository";
 
-export type SearchResultKind = "inbox" | "task" | "entry";
+export type SearchResultKind = "inbox" | "task" | "entry" | "task_log";
 
 export interface SearchResult {
   id: string;
@@ -15,6 +16,7 @@ export interface SearchResult {
   updatedAt: string;
   entryType?: EntryType;
   taskStatus?: TaskStatus;
+  taskId?: string;
 }
 
 function makeSnippet(text: string, maxLength = 120): string {
@@ -38,10 +40,11 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
     return [];
   }
 
-  const [inboxItems, tasks, entries] = await Promise.all([
+  const [inboxItems, tasks, entries, taskLogs] = await Promise.all([
     listInboxItems(),
     listTasks(),
     listEntries({ includeArchived: true }),
+    searchTaskLogEntries(normalizedQuery),
   ]);
 
   const results: SearchResult[] = [];
@@ -79,6 +82,10 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
   }
 
   for (const entry of entries) {
+    if (entry.type === "daily") {
+      continue;
+    }
+
     if (
       !matchesQuery(entry.title, normalizedQuery) &&
       !matchesQuery(entry.contentMarkdown, normalizedQuery)
@@ -93,6 +100,17 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
       snippet: makeSnippet(entry.contentMarkdown || entry.title),
       updatedAt: entry.updatedAt,
       entryType: entry.type,
+    });
+  }
+
+  for (const log of taskLogs) {
+    results.push({
+      id: log.id,
+      kind: "task_log",
+      title: log.taskTitle,
+      snippet: makeSnippet(log.body),
+      updatedAt: log.createdAt,
+      taskId: log.taskId,
     });
   }
 
@@ -111,9 +129,11 @@ export function getSearchResultTargetView(result: SearchResult): AppView {
     return "tasks";
   }
 
+  if (result.kind === "task_log") {
+    return "log";
+  }
+
   switch (result.entryType) {
-    case "daily":
-      return "journal";
     case "task_progress":
       return "today";
     case "note":

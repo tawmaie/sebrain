@@ -1,8 +1,8 @@
 import {
-  BookOpen,
   CheckSquare,
   FileText,
   Inbox,
+  ScrollText,
   Settings,
   Sun,
   Timer,
@@ -16,7 +16,7 @@ const items: Array<{ id: AppView; label: string; icon: LucideIcon }> = [
   { id: "inbox", label: "Inbox", icon: Inbox },
   { id: "tasks", label: "Tasks", icon: CheckSquare },
   { id: "notes", label: "Notes", icon: FileText },
-  { id: "journal", label: "Journal", icon: BookOpen },
+  { id: "log", label: "Log", icon: ScrollText },
   { id: "focus", label: "Focus", icon: Timer },
 ];
 

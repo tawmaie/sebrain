@@ -120,6 +120,39 @@ const migrations: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_notes_task_id ON notes(task_id);
     `,
   },
+  {
+    version: 3,
+    sql: `
+      CREATE TABLE IF NOT EXISTS task_log_entries (
+        id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL,
+        body TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_task_log_task_id
+        ON task_log_entries(task_id, created_at DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_task_log_created_at
+        ON task_log_entries(created_at DESC);
+
+      INSERT INTO task_log_entries (id, task_id, body, created_at)
+      SELECT
+        'mig_' || notes.id,
+        notes.task_id,
+        notes.content_markdown,
+        notes.updated_at
+      FROM notes
+      WHERE notes.type = 'task_progress'
+        AND notes.task_id IS NOT NULL
+        AND length(trim(notes.content_markdown)) > 0
+        AND NOT EXISTS (
+          SELECT 1 FROM task_log_entries
+          WHERE id = 'mig_' || notes.id
+        )
+    `,
+  },
 ];
 
 export async function runMigrations(db: Database): Promise<void> {

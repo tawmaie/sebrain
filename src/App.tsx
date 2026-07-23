@@ -9,7 +9,7 @@ import { TodayPage } from "./features/today/TodayPage";
 import { InboxPage } from "./features/inbox/InboxPage";
 import { TasksPage } from "./features/tasks/TasksPage";
 import { NotesPage } from "./features/notes/NotesPage";
-import { JournalPage } from "./features/journal/JournalPage";
+import { LogPage } from "./features/log/LogPage";
 import { SearchPage } from "./features/search/SearchPage";
 import { FocusPage } from "./features/focus/FocusPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
@@ -146,8 +146,8 @@ function App() {
       ) : null}
       {!searchQuery.trim() && view === "tasks" ? <TasksPage searchQuery={searchQuery} /> : null}
       {!searchQuery.trim() && view === "notes" ? <NotesPage searchQuery={searchQuery} /> : null}
-      {!searchQuery.trim() && view === "journal" ? (
-        <JournalPage searchQuery={searchQuery} />
+      {!searchQuery.trim() && view === "log" ? (
+        <LogPage searchQuery={searchQuery} />
       ) : null}
       {!searchQuery.trim() && view === "focus" ? <FocusPage pomodoro={pomodoro} /> : null}
       {!searchQuery.trim() && view === "settings" ? (

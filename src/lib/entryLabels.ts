@@ -3,7 +3,7 @@ import type { EntryType } from "../types/entry";
 export const ENTRY_TYPE_LABELS: Record<EntryType, string> = {
   note: "Note",
   task_progress: "ความคืบหน้า",
-  daily: "Journal",
+  daily: "บันทึกประจำวัน",
   meeting: "Meeting",
   idea: "Idea",
 };

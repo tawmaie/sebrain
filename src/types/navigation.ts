@@ -3,6 +3,6 @@ export type AppView =
   | "inbox"
   | "tasks"
   | "notes"
-  | "journal"
+  | "log"
   | "focus"
   | "settings";

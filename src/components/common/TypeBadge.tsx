@@ -60,3 +60,17 @@ export function InboxBadge({ className }: { className?: string }) {
     </span>
   );
 }
+
+export function TaskLogBadge({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        badgeBase,
+        "border-accent bg-accent-soft text-success",
+        className,
+      )}
+    >
+      Log
+    </span>
+  );
+}

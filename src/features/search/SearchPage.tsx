@@ -11,6 +11,7 @@ import { ErrorMessage } from "../../components/common/ErrorMessage";
 import {
   EntryTypeBadge,
   InboxBadge,
+  TaskLogBadge,
   TaskStatusBadge,
 } from "../../components/common/TypeBadge";
 import { listRow, listRowClickable, listRowMeta, listRowTitle, listStack } from "../../lib/ui";
@@ -108,6 +109,7 @@ export function SearchPage({ query, onNavigate }: SearchPageProps) {
                     {result.kind === "task" && result.taskStatus ? (
                       <TaskStatusBadge status={result.taskStatus} />
                     ) : null}
+                    {result.kind === "task_log" ? <TaskLogBadge /> : null}
                     {result.kind === "entry" && result.entryType ? (
                       <EntryTypeBadge type={result.entryType} />
                     ) : null}
