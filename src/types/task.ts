@@ -1,5 +1,14 @@
 export type TaskStatus = "inbox" | "today" | "doing" | "done";
 
+export type TaskDateField = "created" | "completed";
+
+export interface TaskListOptions {
+  status?: TaskStatus;
+  dateField?: TaskDateField;
+  fromDate?: string | null;
+  toDate?: string | null;
+}
+
 export interface Task {
   id: string;
   title: string;

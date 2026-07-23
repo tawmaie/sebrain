@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Task, TaskStatus } from "../../types/task";
+import type { Task, TaskDateField, TaskStatus } from "../../types/task";
 import {
   createTask,
   deleteTask,
@@ -11,7 +11,16 @@ import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { LoadingState } from "../../components/common/LoadingState";
 import { TaskList } from "./TaskList";
 import { TaskEditor } from "./TaskEditor";
-import { btnPrimary, cn, masterDetailList, masterDetailPage, masterDetailPanel, panelHeader, panelTitle } from "../../lib/ui";
+import { TaskDateFilter } from "./TaskDateFilter";
+import {
+  btnPrimary,
+  cn,
+  masterDetailList,
+  masterDetailPage,
+  masterDetailPanel,
+  panelHeader,
+  panelTitle,
+} from "../../lib/ui";
 
 interface TasksPageProps {
   searchQuery: string;
@@ -20,16 +29,24 @@ interface TasksPageProps {
 export function TasksPage({ searchQuery }: TasksPageProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<TaskStatus | "all">("all");
+  const [dateField, setDateField] = useState<TaskDateField>("created");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [dateFilterOpen, setDateFilterOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await listTasks();
+      const data = await listTasks({
+        dateField,
+        fromDate: fromDate || null,
+        toDate: toDate || null,
+      });
       setTasks(data);
       setSelectedId((current) => {
         if (current && data.some((task) => task.id === current)) {
@@ -42,11 +59,19 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dateField, fromDate, toDate]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const hasDateFilter = Boolean(fromDate || toDate);
+
+  useEffect(() => {
+    if (hasDateFilter) {
+      setDateFilterOpen(true);
+    }
+  }, [hasDateFilter]);
 
   const filtered = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -90,7 +115,7 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
           </button>
         </div>
 
-        <div className="mb-4 flex gap-5 border-b border-border">
+        <div className="mb-4 flex flex-wrap gap-x-5 gap-y-1 border-b border-border">
           {(["all", "inbox", "today", "doing", "done"] as const).map((value) => (
             <button
               key={value}
@@ -105,6 +130,21 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
             </button>
           ))}
         </div>
+
+        <TaskDateFilter
+          open={dateFilterOpen}
+          onToggle={() => setDateFilterOpen((current) => !current)}
+          dateField={dateField}
+          onDateFieldChange={setDateField}
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onClear={() => {
+            setFromDate("");
+            setToDate("");
+          }}
+        />
 
         {loading ? <LoadingState /> : null}
         {!loading && error ? (

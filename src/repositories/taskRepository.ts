@@ -1,4 +1,4 @@
-import type { Task, TaskInput, TaskStatus } from "../types/task";
+import type { Task, TaskInput, TaskListOptions, TaskStatus } from "../types/task";
 import { getDatabase } from "../services/database";
 
 interface TaskRow {
@@ -47,23 +47,52 @@ function validateEstimated(value: number | undefined): number {
   return Math.floor(estimated);
 }
 
-export async function listTasks(status?: TaskStatus): Promise<Task[]> {
+export async function listTasks(
+  options?: TaskStatus | TaskListOptions,
+): Promise<Task[]> {
   const db = await getDatabase();
+  const filters: TaskListOptions =
+    typeof options === "string" || options === undefined
+      ? { status: options }
+      : options;
 
-  if (status) {
-    const rows = await db.select<TaskRow[]>(
-      `SELECT id, title, description, status, planned_date, estimated_pomodoros,
-              completed_pomodoros, linked_note_id, completed_at, created_at, updated_at
-       FROM tasks WHERE status = $1 ORDER BY updated_at DESC`,
-      [status],
-    );
-    return rows.map(mapRow);
+  const clauses: string[] = [];
+  const params: Array<string> = [];
+
+  if (filters.status) {
+    params.push(filters.status);
+    clauses.push(`status = $${params.length}`);
   }
+
+  if (filters.fromDate || filters.toDate) {
+    const dateField = filters.dateField ?? "created";
+    const column = dateField === "completed" ? "completed_at" : "created_at";
+
+    if (dateField === "completed") {
+      clauses.push("completed_at IS NOT NULL");
+    }
+
+    if (filters.fromDate) {
+      params.push(filters.fromDate);
+      clauses.push(`date(${column}) >= $${params.length}`);
+    }
+
+    if (filters.toDate) {
+      params.push(filters.toDate);
+      clauses.push(`date(${column}) <= $${params.length}`);
+    }
+  }
+
+  const whereClause =
+    clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
 
   const rows = await db.select<TaskRow[]>(
     `SELECT id, title, description, status, planned_date, estimated_pomodoros,
             completed_pomodoros, linked_note_id, completed_at, created_at, updated_at
-     FROM tasks ORDER BY updated_at DESC`,
+     FROM tasks
+     ${whereClause}
+     ORDER BY updated_at DESC`,
+    params,
   );
   return rows.map(mapRow);
 }
