@@ -4,6 +4,7 @@ export type TaskDateField = "created" | "completed";
 
 export interface TaskListOptions {
   status?: TaskStatus;
+  projectId?: string | null;
   dateField?: TaskDateField;
   fromDate?: string | null;
   toDate?: string | null;
@@ -18,6 +19,7 @@ export interface Task {
   estimatedPomodoros: number;
   completedPomodoros: number;
   linkedNoteId: string | null;
+  projectId: string | null;
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -30,4 +32,5 @@ export interface TaskInput {
   plannedDate?: string | null;
   estimatedPomodoros?: number;
   linkedNoteId?: string | null;
+  projectId?: string | null;
 }

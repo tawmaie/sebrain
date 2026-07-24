@@ -7,7 +7,7 @@ import { ErrorMessage } from "./components/common/ErrorMessage";
 import { LoadingState } from "./components/common/LoadingState";
 import { TodayPage } from "./features/today/TodayPage";
 import { InboxPage } from "./features/inbox/InboxPage";
-import { TasksPage } from "./features/tasks/TasksPage";
+import { TasksShell } from "./features/tasks/TasksShell";
 import { NotesPage } from "./features/notes/NotesPage";
 import { LogPage } from "./features/log/LogPage";
 import { SearchPage } from "./features/search/SearchPage";
@@ -144,7 +144,9 @@ function App() {
           onCountChange={refreshInboxCount}
         />
       ) : null}
-      {!searchQuery.trim() && view === "tasks" ? <TasksPage searchQuery={searchQuery} /> : null}
+      {!searchQuery.trim() && view === "tasks" ? (
+        <TasksShell searchQuery={searchQuery} />
+      ) : null}
       {!searchQuery.trim() && view === "notes" ? <NotesPage searchQuery={searchQuery} /> : null}
       {!searchQuery.trim() && view === "log" ? (
         <LogPage searchQuery={searchQuery} />

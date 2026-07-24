@@ -1,5 +1,6 @@
 import type { Task, TaskInput, TaskListOptions, TaskStatus } from "../types/task";
 import { getDatabase } from "../services/database";
+import { getSettings } from "./settingsRepository";
 
 interface TaskRow {
   id: string;
@@ -10,6 +11,7 @@ interface TaskRow {
   estimated_pomodoros: number;
   completed_pomodoros: number;
   linked_note_id: string | null;
+  project_id: string | null;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -25,6 +27,7 @@ function mapRow(row: TaskRow): Task {
     estimatedPomodoros: row.estimated_pomodoros,
     completedPomodoros: row.completed_pomodoros,
     linkedNoteId: row.linked_note_id,
+    projectId: row.project_id,
     completedAt: row.completed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -64,6 +67,15 @@ export async function listTasks(
     clauses.push(`status = $${params.length}`);
   }
 
+  if (filters.projectId !== undefined) {
+    if (filters.projectId === null) {
+      clauses.push("project_id IS NULL");
+    } else {
+      params.push(filters.projectId);
+      clauses.push(`project_id = $${params.length}`);
+    }
+  }
+
   if (filters.fromDate || filters.toDate) {
     const dateField = filters.dateField ?? "created";
     const column = dateField === "completed" ? "completed_at" : "created_at";
@@ -88,7 +100,8 @@ export async function listTasks(
 
   const rows = await db.select<TaskRow[]>(
     `SELECT id, title, description, status, planned_date, estimated_pomodoros,
-            completed_pomodoros, linked_note_id, completed_at, created_at, updated_at
+            completed_pomodoros, linked_note_id, project_id, completed_at,
+            created_at, updated_at
      FROM tasks
      ${whereClause}
      ORDER BY updated_at DESC`,
@@ -101,7 +114,8 @@ export async function getTaskById(id: string): Promise<Task | null> {
   const db = await getDatabase();
   const rows = await db.select<TaskRow[]>(
     `SELECT id, title, description, status, planned_date, estimated_pomodoros,
-            completed_pomodoros, linked_note_id, completed_at, created_at, updated_at
+            completed_pomodoros, linked_note_id, project_id, completed_at,
+            created_at, updated_at
      FROM tasks WHERE id = $1`,
     [id],
   );
@@ -111,6 +125,15 @@ export async function getTaskById(id: string): Promise<Task | null> {
 export async function createTask(input: TaskInput): Promise<Task> {
   const now = new Date().toISOString();
   const status = input.status ?? "inbox";
+
+  let projectId: string | null;
+  if (input.projectId !== undefined) {
+    projectId = input.projectId;
+  } else {
+    const settings = await getSettings();
+    projectId = settings.defaultProjectId ?? null;
+  }
+
   const task: Task = {
     id: crypto.randomUUID(),
     title: validateTitle(input.title),
@@ -122,6 +145,7 @@ export async function createTask(input: TaskInput): Promise<Task> {
     estimatedPomodoros: validateEstimated(input.estimatedPomodoros),
     completedPomodoros: 0,
     linkedNoteId: input.linkedNoteId ?? null,
+    projectId,
     completedAt: status === "done" ? now : null,
     createdAt: now,
     updatedAt: now,
@@ -131,8 +155,9 @@ export async function createTask(input: TaskInput): Promise<Task> {
   await db.execute(
     `INSERT INTO tasks (
       id, title, description, status, planned_date, estimated_pomodoros,
-      completed_pomodoros, linked_note_id, completed_at, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      completed_pomodoros, linked_note_id, project_id, completed_at,
+      created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
     [
       task.id,
       task.title,
@@ -142,6 +167,7 @@ export async function createTask(input: TaskInput): Promise<Task> {
       task.estimatedPomodoros,
       task.completedPomodoros,
       task.linkedNoteId,
+      task.projectId,
       task.completedAt,
       task.createdAt,
       task.updatedAt,
@@ -206,6 +232,8 @@ export async function updateTask(
       patch.linkedNoteId !== undefined
         ? patch.linkedNoteId
         : existing.linkedNoteId,
+    projectId:
+      patch.projectId !== undefined ? patch.projectId : existing.projectId,
     completedAt,
     updatedAt: now,
   };
@@ -220,9 +248,10 @@ export async function updateTask(
       estimated_pomodoros = $5,
       completed_pomodoros = $6,
       linked_note_id = $7,
-      completed_at = $8,
-      updated_at = $9
-     WHERE id = $10`,
+      project_id = $8,
+      completed_at = $9,
+      updated_at = $10
+     WHERE id = $11`,
     [
       updated.title,
       updated.description,
@@ -231,6 +260,7 @@ export async function updateTask(
       updated.estimatedPomodoros,
       updated.completedPomodoros,
       updated.linkedNoteId,
+      updated.projectId,
       updated.completedAt,
       updated.updatedAt,
       updated.id,

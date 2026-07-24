@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Project } from "../../types/project";
 import type { Task, TaskDateField, TaskStatus } from "../../types/task";
 import {
   createTask,
@@ -6,6 +7,7 @@ import {
   listTasks,
   updateTask,
 } from "../../repositories/taskRepository";
+import { listProjects } from "../../repositories/projectRepository";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { LoadingState } from "../../components/common/LoadingState";
@@ -28,7 +30,9 @@ interface TasksPageProps {
 
 export function TasksPage({ searchQuery }: TasksPageProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [filter, setFilter] = useState<TaskStatus | "all">("all");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
   const [dateField, setDateField] = useState<TaskDateField>("created");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -42,12 +46,16 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await listTasks({
-        dateField,
-        fromDate: fromDate || null,
-        toDate: toDate || null,
-      });
+      const [data, projectData] = await Promise.all([
+        listTasks({
+          dateField,
+          fromDate: fromDate || null,
+          toDate: toDate || null,
+        }),
+        listProjects(),
+      ]);
       setTasks(data);
+      setProjects(projectData);
       setSelectedId((current) => {
         if (current && data.some((task) => task.id === current)) {
           return current;
@@ -79,6 +87,16 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
       if (filter !== "all" && task.status !== filter) {
         return false;
       }
+      if (projectFilter === "none" && task.projectId !== null) {
+        return false;
+      }
+      if (
+        projectFilter !== "all" &&
+        projectFilter !== "none" &&
+        task.projectId !== projectFilter
+      ) {
+        return false;
+      }
       if (!query) {
         return true;
       }
@@ -87,7 +105,7 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
         task.description.toLowerCase().includes(query)
       );
     });
-  }, [tasks, filter, searchQuery]);
+  }, [tasks, filter, projectFilter, searchQuery]);
 
   const selected = tasks.find((task) => task.id === selectedId) ?? null;
 
@@ -131,6 +149,29 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
           ))}
         </div>
 
+        {projects.length > 0 ? (
+          <div className="mb-4">
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-text-secondary">
+                Project
+              </span>
+              <select
+                className="w-full rounded-input border border-border-strong bg-surface px-3 py-[9px] text-sm"
+                value={projectFilter}
+                onChange={(event) => setProjectFilter(event.target.value)}
+              >
+                <option value="all">ทุก project</option>
+                <option value="none">ไม่มี project</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : null}
+
         <TaskDateFilter
           open={dateFilterOpen}
           onToggle={() => setDateFilterOpen((current) => !current)}
@@ -153,6 +194,7 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
         {!loading && !error ? (
           <TaskList
             tasks={filtered}
+            projects={projects}
             selectedId={selectedId}
             onSelect={setSelectedId}
           />
@@ -162,6 +204,7 @@ export function TasksPage({ searchQuery }: TasksPageProps) {
       <section className={masterDetailPanel}>
         <TaskEditor
           task={selected}
+          projects={projects}
           onSave={async (patch) => {
             if (!selected) return;
             await updateTask(selected.id, patch);

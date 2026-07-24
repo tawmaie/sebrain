@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { Project } from "../../types/project";
 import type { Task, TaskStatus } from "../../types/task";
 import {
   btn,
@@ -12,12 +13,14 @@ import {
 
 interface TaskEditorProps {
   task: Task | null;
+  projects: Project[];
   onSave: (patch: {
     title: string;
     description: string;
     status: TaskStatus;
     estimatedPomodoros: number;
     plannedDate: string | null;
+    projectId: string | null;
   }) => Promise<void>;
   onDelete: () => void;
   onStatusChange: (status: TaskStatus) => Promise<void>;
@@ -25,6 +28,7 @@ interface TaskEditorProps {
 
 export function TaskEditor({
   task,
+  projects,
   onSave,
   onDelete,
   onStatusChange,
@@ -34,6 +38,7 @@ export function TaskEditor({
   const [status, setStatus] = useState<TaskStatus>("inbox");
   const [estimatedPomodoros, setEstimatedPomodoros] = useState(1);
   const [plannedDate, setPlannedDate] = useState("");
+  const [projectId, setProjectId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +51,7 @@ export function TaskEditor({
     setStatus(task.status);
     setEstimatedPomodoros(task.estimatedPomodoros);
     setPlannedDate(task.plannedDate ?? "");
+    setProjectId(task.projectId ?? "");
     setError(null);
   }, [task]);
 
@@ -92,6 +98,21 @@ export function TaskEditor({
         </select>
       </label>
       <label className={field}>
+        <span className={fieldLabel}>Project</span>
+        <select
+          className={inputClass}
+          value={projectId}
+          onChange={(event) => setProjectId(event.target.value)}
+        >
+          <option value="">ไม่มี project</option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className={field}>
         <span className={fieldLabel}>วันที่กำหนด</span>
         <input
           type="date"
@@ -131,6 +152,7 @@ export function TaskEditor({
                   status,
                   estimatedPomodoros,
                   plannedDate: plannedDate || null,
+                  projectId: projectId || null,
                 });
               } catch (err) {
                 setError(err instanceof Error ? err.message : String(err));

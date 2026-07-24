@@ -1,4 +1,6 @@
+import type { Project } from "../../types/project";
 import type { Task } from "../../types/task";
+import { ProjectBadge } from "../../components/common/ProjectBadge";
 import {
   cn,
   listRow,
@@ -10,6 +12,7 @@ import {
 
 interface TaskRowProps {
   task: Task;
+  project: Project | null;
   selected: boolean;
   onSelect: () => void;
 }
@@ -28,7 +31,7 @@ const statusDotColor: Record<Task["status"], string> = {
   done: "bg-border-strong",
 };
 
-export function TaskRow({ task, selected, onSelect }: TaskRowProps) {
+export function TaskRow({ task, project, selected, onSelect }: TaskRowProps) {
   const isDone = task.status === "done";
 
   return (
@@ -60,6 +63,12 @@ export function TaskRow({ task, selected, onSelect }: TaskRowProps) {
         <p className={listRowMeta}>
           {statusLabel[task.status]} · {task.completedPomodoros}/
           {task.estimatedPomodoros} focus sessions
+          {project ? (
+            <>
+              {" "}
+              · <ProjectBadge project={project} />
+            </>
+          ) : null}
         </p>
       </div>
     </button>

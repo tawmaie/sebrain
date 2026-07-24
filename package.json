@@ -1,16 +1,17 @@
 {
   "name": "sebrain",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.5",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "predev": "npm run version:sync",
-    "build": "tsc && vite build",
-    "prebuild": "npm run version:sync",
+    "dev": "npm run version:sync && vite",
+    "build:app": "tsc && vite build",
+    "build": "npm run version:sync && npm run build:app",
     "preview": "vite preview",
     "version:sync": "node scripts/sync-version.mjs",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauri:dev": "npm run version:sync && tauri dev",
+    "tauri:build": "npm run version:sync && tauri build"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

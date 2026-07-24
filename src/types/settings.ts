@@ -5,6 +5,7 @@ export interface AppSettings {
   longBreakInterval: number;
   autoStartBreak: boolean;
   notificationEnabled: boolean;
+  defaultProjectId: string | null;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -14,6 +15,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   longBreakInterval: 4,
   autoStartBreak: false,
   notificationEnabled: true,
+  defaultProjectId: null,
 };
 
 export const SETTINGS_KEY = "app_settings";

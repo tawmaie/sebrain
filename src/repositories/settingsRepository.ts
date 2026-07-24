@@ -34,6 +34,8 @@ function validateSettings(settings: AppSettings): AppSettings {
   next.longBreakInterval = Math.floor(next.longBreakInterval);
   next.autoStartBreak = Boolean(next.autoStartBreak);
   next.notificationEnabled = Boolean(next.notificationEnabled);
+  next.defaultProjectId =
+    typeof next.defaultProjectId === "string" ? next.defaultProjectId : null;
 
   return next;
 }
