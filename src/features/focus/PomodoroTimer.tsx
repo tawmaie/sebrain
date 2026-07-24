@@ -4,6 +4,7 @@ import { TimerControls } from "./TimerControls";
 
 interface PomodoroTimerProps {
   remainingSeconds: number;
+  overtimeSeconds: number;
   durationSeconds: number;
   sessionType: SessionType;
   status: TimerStatus;
@@ -17,6 +18,7 @@ interface PomodoroTimerProps {
 
 export function PomodoroTimer({
   remainingSeconds,
+  overtimeSeconds,
   durationSeconds,
   sessionType,
   status,
@@ -31,8 +33,10 @@ export function PomodoroTimer({
     <div className="rounded-card border border-border bg-surface px-5 py-6 shadow-[0_8px_24px_rgba(24,24,24,0.06)]">
       <TimerDisplay
         remainingSeconds={remainingSeconds}
+        overtimeSeconds={overtimeSeconds}
         durationSeconds={durationSeconds}
         sessionType={sessionType}
+        status={status}
         taskLabel={taskLabel}
       />
       <TimerControls

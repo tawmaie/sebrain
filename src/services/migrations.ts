@@ -173,6 +173,12 @@ const migrations: Migration[] = [
         ON projects(updated_at DESC);
     `,
   },
+  {
+    version: 5,
+    sql: `
+      ALTER TABLE active_timer ADD COLUMN overtime_seconds INTEGER NOT NULL DEFAULT 0;
+    `,
+  },
 ];
 
 export async function runMigrations(db: Database): Promise<void> {

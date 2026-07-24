@@ -114,7 +114,9 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
   );
 
   const timerLocked =
-    pomodoro.status === "running" || pomodoro.status === "paused";
+    pomodoro.status === "running" ||
+    pomodoro.status === "paused" ||
+    pomodoro.status === "overtime";
 
   const selectFocusTask = (taskId: string) => {
     if (timerLocked) {
@@ -298,6 +300,8 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                     "rounded-full px-3 py-1 text-xs font-semibold",
                     pomodoro.status === "running" &&
                       "bg-accent-soft text-success",
+                    pomodoro.status === "overtime" &&
+                      "bg-[#fef3c7] text-[#b45309]",
                     pomodoro.status === "paused" &&
                       "bg-[#fef3c7] text-[#92400e]",
                     pomodoro.status === "idle" &&
@@ -306,14 +310,17 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
                 >
                   {pomodoro.status === "running"
                     ? "กำลังโฟกัส"
-                    : pomodoro.status === "paused"
-                      ? "หยุดชั่วคราว"
-                      : "พร้อมเริ่ม"}
+                    : pomodoro.status === "overtime"
+                      ? "เกินเวลาแล้ว"
+                      : pomodoro.status === "paused"
+                        ? "หยุดชั่วคราว"
+                        : "พร้อมเริ่ม"}
                 </span>
               </div>
 
               <PomodoroTimer
                 remainingSeconds={pomodoro.remainingSeconds}
+                overtimeSeconds={pomodoro.overtimeSeconds}
                 durationSeconds={pomodoro.durationSeconds}
                 sessionType={pomodoro.sessionType}
                 status={pomodoro.status}

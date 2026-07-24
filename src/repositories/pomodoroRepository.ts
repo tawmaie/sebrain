@@ -24,9 +24,10 @@ interface ActiveTimerRow {
   task_id: string | null;
   note_id: string | null;
   session_type: SessionType;
-  status: "running" | "paused";
+  status: "running" | "paused" | "overtime";
   duration_seconds: number;
   remaining_seconds: number | null;
+  overtime_seconds: number;
   started_at: string;
   end_at: string | null;
   paused_at: string | null;
@@ -56,6 +57,7 @@ function mapActiveTimer(row: ActiveTimerRow): ActiveTimer {
     status: row.status,
     durationSeconds: row.duration_seconds,
     remainingSeconds: row.remaining_seconds,
+    overtimeSeconds: row.overtime_seconds ?? 0,
     startedAt: row.started_at,
     endAt: row.end_at,
     pausedAt: row.paused_at,
@@ -134,11 +136,25 @@ export async function updateSessionStatus(
   );
 }
 
+export async function updateSessionCompletion(
+  id: string,
+  endedAt: string,
+  durationSeconds: number,
+): Promise<void> {
+  const db = await getDatabase();
+  await db.execute(
+    `UPDATE pomodoro_sessions
+     SET status = 'completed', ended_at = $1, duration_seconds = $2
+     WHERE id = $3`,
+    [endedAt, durationSeconds, id],
+  );
+}
+
 export async function getActiveTimer(): Promise<ActiveTimer | null> {
   const db = await getDatabase();
   const rows = await db.select<ActiveTimerRow[]>(
     `SELECT id, task_id, note_id, session_type, status, duration_seconds,
-            remaining_seconds, started_at, end_at, paused_at, updated_at
+            remaining_seconds, overtime_seconds, started_at, end_at, paused_at, updated_at
      FROM active_timer WHERE id = $1`,
     [ACTIVE_TIMER_ID],
   );
@@ -154,8 +170,8 @@ export async function upsertActiveTimer(
   await db.execute(
     `INSERT INTO active_timer (
       id, task_id, note_id, session_type, status, duration_seconds,
-      remaining_seconds, started_at, end_at, paused_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      remaining_seconds, overtime_seconds, started_at, end_at, paused_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     ON CONFLICT(id) DO UPDATE SET
       task_id = excluded.task_id,
       note_id = excluded.note_id,
@@ -163,6 +179,7 @@ export async function upsertActiveTimer(
       status = excluded.status,
       duration_seconds = excluded.duration_seconds,
       remaining_seconds = excluded.remaining_seconds,
+      overtime_seconds = excluded.overtime_seconds,
       started_at = excluded.started_at,
       end_at = excluded.end_at,
       paused_at = excluded.paused_at,
@@ -175,6 +192,7 @@ export async function upsertActiveTimer(
       record.status,
       record.durationSeconds,
       record.remainingSeconds,
+      record.overtimeSeconds,
       record.startedAt,
       record.endAt,
       record.pausedAt,

@@ -1,7 +1,9 @@
 interface TimerDisplayProps {
   remainingSeconds: number;
+  overtimeSeconds: number;
   durationSeconds: number;
   sessionType: string;
+  status: string;
   taskLabel?: string | null;
 }
 
@@ -19,10 +21,13 @@ const modeLabel: Record<string, string> = {
 
 export function TimerDisplay({
   remainingSeconds,
+  overtimeSeconds,
   durationSeconds,
   sessionType,
+  status,
   taskLabel,
 }: TimerDisplayProps) {
+  const isOvertime = status === "overtime";
   const progress =
     durationSeconds > 0
       ? Math.min(
@@ -39,11 +44,26 @@ export function TimerDisplay({
       <p className="m-0 text-xs font-semibold tracking-[0.08em] text-text-secondary uppercase">
         {modeLabel[sessionType] ?? sessionType}
       </p>
-      <p className="my-2 text-[60px] font-bold tracking-[0.02em] tabular-nums">
-        {formatTime(remainingSeconds)}
-      </p>
+      {isOvertime ? (
+        <>
+          <p className="my-1 text-sm font-medium text-[#b45309]">
+            เกินเวลาแล้ว
+          </p>
+          <p className="my-2 text-[60px] font-bold tracking-[0.02em] tabular-nums text-[#b45309]">
+            +{formatTime(overtimeSeconds)}
+          </p>
+        </>
+      ) : (
+        <p className="my-2 text-[60px] font-bold tracking-[0.02em] tabular-nums">
+          {formatTime(remainingSeconds)}
+        </p>
+      )}
       <p className="mb-3 text-[13px] text-text-secondary">
-        {taskLabel ? taskLabel : "ไม่ได้ผูกกับงาน"}
+        {isOvertime
+          ? "นับเวลาต่อ — กดจบโฟกัสเมื่อเสร็จงาน"
+          : taskLabel
+            ? taskLabel
+            : "ไม่ได้ผูกกับงาน"}
       </p>
       <div
         className="mb-4 h-1.5 overflow-hidden rounded-full bg-surface-muted"
@@ -53,7 +73,11 @@ export function TimerDisplay({
         aria-valuenow={Math.round(progress)}
       >
         <div
-          className="zebra-fill h-full rounded-full transition-[width] duration-[250ms] ease-linear"
+          className={
+            isOvertime
+              ? "h-full rounded-full bg-[#f59e0b] transition-[width] duration-[250ms] ease-linear"
+              : "zebra-fill h-full rounded-full transition-[width] duration-[250ms] ease-linear"
+          }
           style={{ width: `${progress}%` }}
         />
       </div>

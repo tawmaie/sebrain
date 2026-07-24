@@ -49,6 +49,28 @@ export function TimerControls({
         </>
       ) : null}
 
+      {status === "overtime" ? (
+        <>
+          <button
+            type="button"
+            className={btnPrimary}
+            onClick={onPause}
+          >
+            หยุดชั่วคราว
+          </button>
+          <button type="button" className={btnAccent} onClick={onFinishEarly}>
+            จบโฟกัส
+          </button>
+          <button
+            type="button"
+            className={btn}
+            onClick={() => setConfirmReset(true)}
+          >
+            รีเซ็ต
+          </button>
+        </>
+      ) : null}
+
       {status === "paused" ? (
         <>
           <button

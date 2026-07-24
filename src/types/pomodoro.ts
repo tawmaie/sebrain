@@ -1,5 +1,5 @@
 export type SessionType = "focus" | "short_break" | "long_break";
-export type TimerStatus = "idle" | "running" | "paused";
+export type TimerStatus = "idle" | "running" | "paused" | "overtime";
 export type SessionStatus = "running" | "completed" | "cancelled";
 
 export interface PomodoroSession {
@@ -22,6 +22,7 @@ export interface ActiveTimer {
   status: Exclude<TimerStatus, "idle">;
   durationSeconds: number;
   remainingSeconds: number | null;
+  overtimeSeconds: number;
   startedAt: string;
   endAt: string | null;
   pausedAt: string | null;

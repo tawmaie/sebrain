@@ -46,7 +46,10 @@ export function FocusPage({ pomodoro }: FocusPageProps) {
     })();
   }, []);
 
-  const locked = pomodoro.status === "running" || pomodoro.status === "paused";
+  const locked =
+    pomodoro.status === "running" ||
+    pomodoro.status === "paused" ||
+    pomodoro.status === "overtime";
   const selectedTask = tasks.find((task) => task.id === pomodoro.taskId);
 
   return (
@@ -61,6 +64,7 @@ export function FocusPage({ pomodoro }: FocusPageProps) {
       <div className="mb-5 grid grid-cols-[1.2fr_1fr] gap-4 max-[1100px]:grid-cols-1">
         <PomodoroTimer
           remainingSeconds={pomodoro.remainingSeconds}
+          overtimeSeconds={pomodoro.overtimeSeconds}
           durationSeconds={pomodoro.durationSeconds}
           sessionType={pomodoro.sessionType}
           status={pomodoro.status}
