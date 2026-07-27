@@ -57,6 +57,13 @@
     overflow: hidden;
   }
 
+  html.mini-mode,
+  html.mini-mode body,
+  html.mini-mode #root {
+    min-width: 0;
+    overflow: hidden;
+  }
+
   body {
     color: var(--color-text-primary);
     background: var(--color-bg);

@@ -1,12 +1,26 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window",
+  "description": "Capability for the application windows",
   "windows": [
-    "main"
+    "main",
+    "mini",
+    "work-log",
+    "task-detail"
   ],
   "permissions": [
     "core:default",
+    "core:event:allow-emit",
+    "core:event:allow-listen",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-close",
+    "core:window:allow-set-focus",
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-set-size",
+    "core:window:allow-is-visible",
+    "core:webview:allow-get-all-webviews",
     "opener:default",
     "notification:default",
     "sql:default",

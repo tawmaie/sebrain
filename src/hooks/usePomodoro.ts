@@ -14,6 +14,7 @@ import {
 import { incrementCompletedPomodoros } from "../repositories/taskRepository";
 import { getSettings } from "../repositories/settingsRepository";
 import { notifySessionCompleted } from "../services/notificationService";
+import { emitPomodoroChanged, onPomodoroChanged } from "../services/pomodoroEvents";
 import type { PomodoroSession } from "../types/pomodoro";
 
 function remainingFromEndAt(endAt: string | null): number {
@@ -113,6 +114,71 @@ export function usePomodoro() {
     setSessions(recent);
   }, []);
 
+  const notifyChanged = useCallback(async () => {
+    await emitPomodoroChanged();
+  }, []);
+
+  const syncFromDatabase = useCallback(async () => {
+    const loadedSettings = settingsRef.current ?? (await getSettings());
+    if (!settingsRef.current) {
+      setSettings(loadedSettings);
+    }
+
+    const active = await getActiveTimer();
+
+    if (!active) {
+      setStatus("idle");
+      setSessionType("focus");
+      setTaskId(null);
+      setNoteId(null);
+      setEndAt(null);
+      setStartedAt(null);
+      setOvertimeSeconds(0);
+      overtimeHandledRef.current = false;
+      sessionIdRef.current = null;
+      const duration = durationForType(loadedSettings, "focus");
+      setDurationSeconds(duration);
+      setRemainingSeconds(duration);
+      return;
+    }
+
+    setSessionType(active.sessionType);
+    setTaskId(active.taskId);
+    setNoteId(active.noteId);
+    setDurationSeconds(active.durationSeconds);
+    setStartedAt(active.startedAt);
+
+    if (active.status === "paused") {
+      setStatus("paused");
+      setRemainingSeconds(active.remainingSeconds ?? active.durationSeconds);
+      setOvertimeSeconds(active.overtimeSeconds);
+      setEndAt(null);
+      overtimeHandledRef.current = active.overtimeSeconds > 0;
+      return;
+    }
+
+    if (active.status === "overtime" && active.endAt) {
+      setStatus("overtime");
+      setEndAt(active.endAt);
+      setRemainingSeconds(0);
+      setOvertimeSeconds(overtimeFromEndAt(active.endAt));
+      overtimeHandledRef.current = true;
+      return;
+    }
+
+    if (active.status === "running" && active.endAt) {
+      const remaining = remainingFromEndAt(active.endAt);
+      if (remaining <= 0) {
+        return;
+      }
+      setStatus("running");
+      setEndAt(active.endAt);
+      setRemainingSeconds(remaining);
+      setOvertimeSeconds(0);
+      overtimeHandledRef.current = false;
+    }
+  }, []);
+
   const finalizeCompletion = useCallback(
     async (
       timer: {
@@ -195,11 +261,12 @@ export function usePomodoro() {
 
         setLastCompletedAt(endedAt);
         await refreshSessions();
+        await notifyChanged();
       } finally {
         finalizingRef.current = false;
       }
     },
-    [refreshSessions],
+    [refreshSessions, notifyChanged],
   );
 
   const enterOvertime = useCallback(
@@ -247,11 +314,12 @@ export function usePomodoro() {
         setRemainingSeconds(0);
         setOvertimeSeconds(overtimeFromEndAt(timer.targetEndAt));
         setEndAt(timer.targetEndAt);
+        await notifyChanged();
       } finally {
         enteringOvertimeRef.current = false;
       }
     },
-    [],
+    [notifyChanged],
   );
 
   useEffect(() => {
@@ -370,6 +438,20 @@ export function usePomodoro() {
   }, []);
 
   useEffect(() => {
+    let unlisten: (() => void) | undefined;
+
+    void onPomodoroChanged(() => {
+      void syncFromDatabase();
+    }).then((cleanup) => {
+      unlisten = cleanup;
+    });
+
+    return () => {
+      unlisten?.();
+    };
+  }, [syncFromDatabase]);
+
+  useEffect(() => {
     if (status !== "running" || !endAt) {
       return;
     }
@@ -484,6 +566,7 @@ export function usePomodoro() {
     setStatus("running");
     setError(null);
     await refreshSessions();
+    await notifyChanged();
   };
 
   const pause = async () => {
@@ -508,6 +591,7 @@ export function usePomodoro() {
       setOvertimeSeconds(overtime);
       setEndAt(null);
       setStatus("paused");
+      await notifyChanged();
       return;
     }
 
@@ -535,6 +619,7 @@ export function usePomodoro() {
     setRemainingSeconds(remaining);
     setEndAt(null);
     setStatus("paused");
+    await notifyChanged();
   };
 
   const resume = async () => {
@@ -565,6 +650,7 @@ export function usePomodoro() {
 
       setEndAt(reconstructedEndAt);
       setStatus("overtime");
+      await notifyChanged();
       return;
     }
 
@@ -594,6 +680,7 @@ export function usePomodoro() {
 
     setEndAt(nextEndAt);
     setStatus("running");
+    await notifyChanged();
   };
 
   const reset = async () => {
@@ -634,6 +721,7 @@ export function usePomodoro() {
     setDurationSeconds(duration);
     setRemainingSeconds(duration);
     await refreshSessions();
+    await notifyChanged();
   };
 
   const finishEarly = async () => {

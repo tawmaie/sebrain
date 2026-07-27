@@ -1,0 +1,59 @@
+{
+  "releases": [
+    {
+      "version": "0.2.0",
+      "date": "2026-07-27",
+      "changes": {
+        "added": [
+          "Mini Pomodoro — หน้าต่างเล็กแบบ always-on-top สำหรับโฟกัส",
+          "Mini Mode Hub — ซ่อนหน้าต่างหลักอัตโนมัติเมื่อเปิด mini และกลับมาเมื่อปิด",
+          "แท็บ Timer / เคส ในหน้าต่าง mini",
+          "เลือกเคส เปลี่ยนโหมด และเปิดรายละเอียดเคสจาก mini",
+          "หน้าต่าง Work Log แยกสำหรับบันทึกงาน",
+          "หน้าต่าง Task Detail แยกสำหรับดูรายละเอียดเคส",
+          "เปิด mini จาก system tray"
+        ],
+        "changed": [
+          "ปรับขนาดหน้าต่าง mini ให้กะทัดรัด (~300×300px)"
+        ]
+      }
+    },
+    {
+      "version": "0.1.7",
+      "date": "2026-07-20",
+      "changes": {
+        "added": [
+          "Projects — จัดกลุ่มงานตาม project พร้อมสี",
+          "ปฏิทิน (Calendar) สำหรับดูงานตามวัน",
+          "Work Log — บันทึกงานที่ทำระหว่างโฟกัส",
+          "ตัวกรองงาน (Filter)",
+          "การแจ้งเตือนเมื่อจบรอบ Pomodoro",
+          "ระบบ sync เวอร์ชันจาก version.json"
+        ],
+        "changed": [
+          "ปรับปรุงหน้า Today และ Focus",
+          "เปลี่ยนไอคอนแอป"
+        ],
+        "fixed": [
+          "แก้ responsive layout",
+          "แก้ปัญหา Note"
+        ]
+      }
+    },
+    {
+      "version": "0.1.0",
+      "date": "2026-07-01",
+      "changes": {
+        "added": [
+          "Quick Capture และ Inbox",
+          "จัดการงาน (Inbox, Today, Doing, Done)",
+          "Pomodoro Timer — Focus, Short Break, Long Break",
+          "Markdown Notes พร้อม preview",
+          "ค้นหาข้าม Inbox, Tasks และ Notes",
+          "Keyboard shortcuts (Ctrl+K, Ctrl+N)",
+          "Settings — ปรับระยะเวลา Pomodoro และพฤติกรรม"
+        ]
+      }
+    }
+  ]
+}

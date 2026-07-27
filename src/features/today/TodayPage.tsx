@@ -18,7 +18,6 @@ import { LoadingState } from "../../components/common/LoadingState";
 import { QuickCapture } from "../inbox/QuickCapture";
 import { PomodoroTimer } from "../focus/PomodoroTimer";
 import { TaskDetailDrawer } from "./TaskDetailDrawer";
-import { TodayQuickLog } from "./TodayQuickLog";
 import type { usePomodoro } from "../../hooks/usePomodoro";
 import { btnPrimary, cn, field, input as inputClass } from "../../lib/ui";
 
@@ -489,10 +488,6 @@ export function TodayPage({ pomodoro, captureRequestId }: TodayPageProps) {
               )}
             </section>
           </div>
-
-          {doing.length > 0 ? (
-            <TodayQuickLog tasks={doing} preferredTaskId={pomodoro.taskId} />
-          ) : null}
 
           <section className="rounded-modal border border-border bg-surface p-5">
             <div className="mb-4 flex items-start justify-between gap-4">

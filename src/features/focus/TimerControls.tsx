@@ -10,6 +10,7 @@ interface TimerControlsProps {
   onResume: () => void;
   onReset: () => void;
   onFinishEarly: () => void;
+  variant?: "default" | "mini";
 }
 
 export function TimerControls({
@@ -19,18 +20,35 @@ export function TimerControls({
   onResume,
   onReset,
   onFinishEarly,
+  variant = "default",
 }: TimerControlsProps) {
   const [confirmReset, setConfirmReset] = useState(false);
+  const isMini = variant === "mini";
+  const buttonClass = isMini
+    ? `${btn} min-h-7 px-2.5 py-0 text-xs`
+    : btn;
+  const buttonPrimaryClass = isMini
+    ? `${btnPrimary} min-h-7 px-2.5 py-0 text-xs`
+    : btnPrimary;
+  const buttonAccentClass = isMini
+    ? `${btnAccent} min-h-7 px-2.5 py-0 text-xs`
+    : btnAccent;
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2">
+    <div
+      className={
+        isMini
+          ? "flex flex-wrap items-center justify-center gap-1"
+          : "flex flex-wrap items-center justify-center gap-2"
+      }
+    >
       {status === "idle" ? (
         <button
           type="button"
-          className={btnAccent}
+          className={buttonAccentClass}
           onClick={onStart}
         >
-          เริ่มโฟกัส
+          {isMini ? "เริ่ม" : "เริ่มโฟกัส"}
         </button>
       ) : null}
 
@@ -38,13 +56,13 @@ export function TimerControls({
         <>
           <button
             type="button"
-            className={btnPrimary}
+            className={buttonPrimaryClass}
             onClick={onPause}
           >
-            หยุดชั่วคราว
+            {isMini ? "หยุด" : "หยุดชั่วคราว"}
           </button>
-          <button type="button" className={btn} onClick={onFinishEarly}>
-            จบก่อนเวลา
+          <button type="button" className={buttonClass} onClick={onFinishEarly}>
+            {isMini ? "จบ" : "จบก่อนเวลา"}
           </button>
         </>
       ) : null}
@@ -53,17 +71,17 @@ export function TimerControls({
         <>
           <button
             type="button"
-            className={btnPrimary}
+            className={buttonPrimaryClass}
             onClick={onPause}
           >
-            หยุดชั่วคราว
+            {isMini ? "หยุด" : "หยุดชั่วคราว"}
           </button>
-          <button type="button" className={btnAccent} onClick={onFinishEarly}>
-            จบโฟกัส
+          <button type="button" className={buttonAccentClass} onClick={onFinishEarly}>
+            {isMini ? "จบ" : "จบโฟกัส"}
           </button>
           <button
             type="button"
-            className={btn}
+            className={buttonClass}
             onClick={() => setConfirmReset(true)}
           >
             รีเซ็ต
@@ -75,20 +93,20 @@ export function TimerControls({
         <>
           <button
             type="button"
-            className={btnPrimary}
+            className={buttonPrimaryClass}
             onClick={onResume}
           >
             ทำต่อ
           </button>
           <button
             type="button"
-            className={btn}
+            className={buttonClass}
             onClick={() => setConfirmReset(true)}
           >
             รีเซ็ต
           </button>
-          <button type="button" className={btn} onClick={onFinishEarly}>
-            จบก่อนเวลา
+          <button type="button" className={buttonClass} onClick={onFinishEarly}>
+            {isMini ? "จบ" : "จบก่อนเวลา"}
           </button>
         </>
       ) : null}

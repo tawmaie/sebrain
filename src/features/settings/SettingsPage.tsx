@@ -9,6 +9,7 @@ import {
   deleteProject,
   listProjects,
 } from "../../repositories/projectRepository";
+import { ChangelogSection } from "./ChangelogSection";
 import { ProjectListItem } from "./ProjectListItem";
 import { ErrorMessage } from "../../components/common/ErrorMessage";
 import { LoadingState } from "../../components/common/LoadingState";
@@ -276,6 +277,8 @@ export function SettingsPage({ onSaved }: SettingsPageProps) {
           <span>เปิดการแจ้งเตือน</span>
         </label>
       </section>
+
+      <ChangelogSection />
 
       {error ? <p className="mt-2 mb-0 text-xs text-danger">{error}</p> : null}
 

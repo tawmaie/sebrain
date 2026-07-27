@@ -4,7 +4,19 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const versionPath = join(root, "version.json");
+const changelogPath = join(root, "changelog.json");
 const { version } = JSON.parse(readFileSync(versionPath, "utf8"));
+const changelog = JSON.parse(readFileSync(changelogPath, "utf8"));
+const changelogVersions = new Set(
+  (changelog.releases ?? []).map((release) => release.version),
+);
+
+if (!changelogVersions.has(version)) {
+  console.error(
+    `Missing changelog entry for version ${version} in changelog.json`,
+  );
+  process.exit(1);
+}
 
 if (!/^\d+\.\d+\.\d+(-[\w.-]+)?$/.test(version)) {
   console.error(`Invalid version in version.json: ${version}`);
